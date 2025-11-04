@@ -272,6 +272,37 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+function getAddressFromCoords(lat, lon) {
+  try {
+    // 使用 BigDataCloud (免費、無需 API Key、較快)
+    var url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=zh';
+    
+    var options = {
+      method: 'get',
+      muteHttpExceptions: true
+    };
+    
+    var response = UrlFetchApp.fetch(url, options);
+    var data = JSON.parse(response.getContentText());
+    
+    if (data) {
+      var city = data.city || data.locality || '';
+      var province = data.principalSubdivision || '';
+      
+      var result = '';
+      if (province) result += province;
+      if (city && city !== province) result += city;
+      
+      return result || '附近';
+    }
+    
+    return '';
+  } catch (error) {
+    Logger.log('Geocoding error: ' + error);
+    return '';
+  }
+}
+
 function testConfig() {
   // 直接使用全域變數
   Logger.log('API_BASE: ' + BASE_URL);
