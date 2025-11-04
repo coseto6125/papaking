@@ -12,7 +12,7 @@ function getConfig() {
     TDX_ID: PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_ID') || 'YOUR_ID',
     TDX_SECRET: PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_SECRET') || 'YOUR_SECRET',
     AUTH_URL: 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token',
-    API_BASE: 'https://tdx.transportdata.tw/api/basic/v2',
+    API_BASE: 'https://tdx.transportdata.tw/api/advanced/v1',
     LINE_URL: 'https://api.line.me/v2/bot/message/reply'
   };
 }
@@ -101,8 +101,9 @@ function queryOnStreet(lat, lon) {
   try {
     var config = getConfig();
     var token = getTDXToken();
-    var url = config.API_BASE + '/Parking/OnStreet/ParkingSpace/NearBy';
-    var query = '?lat=' + lat + '&lon=' + lon + '&distance=1000&$format=JSON&$top=10';
+    var url = config.API_BASE + '/Parking/OnStreet/ParkingSpot/NearBy';
+    var query = '?$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
+                '&$format=JSON&$top=10';
     
     Logger.log('路邊停車格 URL: ' + url + query);
     
@@ -154,8 +155,9 @@ function queryParking(lat, lon) {
   try {
     var config = getConfig();
     var token = getTDXToken();
-    var url = config.API_BASE + '/Parking/OffStreet/ParkingLots/NearBy';
-    var query = '?lat=' + lat + '&lon=' + lon + '&distance=1000&$format=JSON&$top=5';
+    var url = config.API_BASE + '/Parking/OffStreet/CarPark/NearBy';
+    var query = '?$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
+                '&$format=JSON&$top=5';
     
     Logger.log('停車場 URL: ' + url + query);
     
@@ -207,7 +209,7 @@ function queryParking(lat, lon) {
 function testConfig() {
   var config = getConfig();
   Logger.log('API_BASE: ' + config.API_BASE);
-  Logger.log('應該是: https://tdx.transportdata.tw/api/basic/v2');
+  Logger.log('應該是: https://tdx.transportdata.tw/api/advanced/v1');
 }
 
 function testFull() {
