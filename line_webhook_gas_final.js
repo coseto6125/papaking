@@ -169,17 +169,7 @@ function queryOnStreet(lat, lon) {
       var spotCount = seg.spots.length;
       var pos = seg.position;
       
-      // 取得地址（限前3個，避免太慢）
-      var address = '';
-      if (i < 3 && pos && pos.PositionLat && pos.PositionLon) {
-        address = getAddressFromCoords(pos.PositionLat, pos.PositionLon);
-      }
-      
-      result += '【' + (i + 1) + '】';
-      if (address) {
-        result += address + '\n';
-      }
-      result += '路段 ' + segId + '\n';
+      result += '【' + (i + 1) + '】路段 ' + segId + '\n';
       result += '🅿️ 共 ' + spotCount + ' 格（小客車）\n';
       
       if (pos && pos.PositionLat && pos.PositionLon) {
@@ -269,49 +259,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function getAddressFromCoords(lat, lon) {
-  try {
-    // 使用 Nominatim search (不是 reverse)
-    // 先用 reverse 試試看
-    var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1&accept-language=zh-TW';
-    
-    var options = {
-      method: 'get',
-      headers: {
-        'User-Agent': 'LINE-Parking-Bot/1.0'
-      },
-      muteHttpExceptions: true
-    };
-    
-    // Nominatim 要求每秒最多 1 次
-    Utilities.sleep(1100);
-    
-    var response = UrlFetchApp.fetch(url, options);
-    var data = JSON.parse(response.getContentText());
-    
-    Logger.log('Nominatim response: ' + JSON.stringify(data).substring(0, 200));
-    
-    if (data && data.address) {
-      var addr = data.address;
-      var road = addr.road || '';
-      var suburb = addr.suburb || addr.neighbourhood || '';
-      var district = addr.city_district || addr.district || '';
-      var city = addr.city || addr.town || addr.county || '';
-      
-      var result = '';
-      if (city) result += city;
-      if (district && district !== city) result += district;
-      if (road) result += road;
-      
-      return result || '';
-    }
-    
-    return '';
-  } catch (error) {
-    Logger.log('Geocoding error: ' + error);
-    return '';
-  }
-}
 
 
 function testConfig() {
