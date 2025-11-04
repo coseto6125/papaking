@@ -96,9 +96,31 @@ function authenticateTDX() {
     muteHttpExceptions: true
   };
   
-  var response = UrlFetchApp.fetch(CONFIG.AUTH_URL, options);
-  var data = JSON.parse(response.getContentText());
-  return data.access_token;
+  try {
+    var response = UrlFetchApp.fetch(CONFIG.AUTH_URL, options);
+    var statusCode = response.getResponseCode();
+    var responseText = response.getContentText();
+    
+    Logger.log('TDX Auth Status: ' + statusCode);
+    
+    if (statusCode !== 200) {
+      Logger.log('TDX Auth Error Response: ' + responseText);
+      throw new Error('TDX authentication failed with status ' + statusCode);
+    }
+    
+    var data = JSON.parse(responseText);
+    
+    if (!data.access_token) {
+      Logger.log('TDX Auth Response (no token): ' + responseText);
+      throw new Error('TDX response has no access_token');
+    }
+    
+    return data.access_token;
+    
+  } catch (error) {
+    Logger.log('TDX Auth Exception: ' + error.toString());
+    throw error;
+  }
 }
 
 // ==================== 停車場查詢 ====================
@@ -116,8 +138,20 @@ function searchNearbyParking(lat, lon) {
       muteHttpExceptions: true
     };
     
+    Logger.log('Fetching parking from: ' + url + '?' + query);
+    
     var response = UrlFetchApp.fetch(url + '?' + query, options);
-    var carparks = JSON.parse(response.getContentText());
+    var statusCode = response.getResponseCode();
+    var responseText = response.getContentText();
+    
+    Logger.log('Parking API Status: ' + statusCode);
+    
+    if (statusCode !== 200) {
+      Logger.log('Parking API Error: ' + responseText);
+      return '❌ API 回應錯誤 (狀態碼: ' + statusCode + ')';
+    }
+    
+    var carparks = JSON.parse(responseText);
     
     if (!carparks || carparks.length === 0) {
       return '❌ 附近找不到停車場';
@@ -144,7 +178,7 @@ function searchNearbyParking(lat, lon) {
     
   } catch (error) {
     Logger.log('Parking error: ' + error);
-    return '❌ 查詢失敗';
+    return '❌ 查詢失敗: ' + error.toString();
   }
 }
 
@@ -163,8 +197,20 @@ function searchOnStreetParking(lat, lon) {
       muteHttpExceptions: true
     };
     
+    Logger.log('Fetching on-street from: ' + url + '?' + query);
+    
     var response = UrlFetchApp.fetch(url + '?' + query, options);
-    var segments = JSON.parse(response.getContentText());
+    var statusCode = response.getResponseCode();
+    var responseText = response.getContentText();
+    
+    Logger.log('OnStreet API Status: ' + statusCode);
+    
+    if (statusCode !== 200) {
+      Logger.log('OnStreet API Error: ' + responseText);
+      return '❌ API 回應錯誤 (狀態碼: ' + statusCode + ')';
+    }
+    
+    var segments = JSON.parse(responseText);
     
     if (!segments || segments.length === 0) {
       return '❌ 附近找不到路邊停車格';
@@ -205,7 +251,7 @@ function searchOnStreetParking(lat, lon) {
     
   } catch (error) {
     Logger.log('OnStreet error: ' + error);
-    return '❌ 查詢失敗';
+    return '❌ 查詢失敗: ' + error.toString();
   }
 }
 
