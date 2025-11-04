@@ -154,7 +154,7 @@ function searchOnStreetParking(lat, lon) {
   try {
     var token = authenticateTDX();
     var url = CONFIG.BASE_URL + '/Parking/OnStreet/ParkingSegment/NearBy';
-    var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',500)') + 
+    var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=10';
     
     var options = {
