@@ -127,8 +127,8 @@ function authenticateTDX() {
 function searchNearbyParking(lat, lon) {
   try {
     var token = authenticateTDX();
-    var url = BASE_URL + '/Parking/OffStreet/CarPark/City/NewTaipei';  // 或用 NearBy
-    var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
+    var url = BASE_URL + '/Parking/OffStreet/ParkingLots/NearBy';  // 全台查詢
+    var query = 'lat=' + lat + '&lon=' + lon + '&distance=1000' + 
                 '&$format=JSON&$top=5';
     
     var options = {
@@ -210,8 +210,8 @@ function searchNearbyParking(lat, lon) {
 function searchOnStreetParking(lat, lon) {
   try {
     var token = authenticateTDX();
-    var url = BASE_URL + '/Parking/OnStreet/ParkingSpace/City/NewTaipei';  // 改用 City API
-    var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
+    var url = BASE_URL + '/Parking/OnStreet/ParkingSpace/NearBy';  // 全台查詢
+    var query = 'lat=' + lat + '&lon=' + lon + '&distance=1000' + 
                 '&$format=JSON&$top=10';
     
     var options = {
