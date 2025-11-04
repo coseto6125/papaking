@@ -222,3 +222,163 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   var c = 2 * Math.asin(Math.sqrt(a));
   return R * c;
 }
+
+// ==================== 測試函數 ====================
+
+/**
+ * 測試路邊停車格查詢
+ * 使用台北車站座標
+ */
+function testOnStreetParking() {
+  var lat = 25.047924;
+  var lon = 121.517081;
+  
+  Logger.log('=== 測試路邊停車格查詢 ===');
+  Logger.log('座標: ' + lat + ', ' + lon + ' (台北車站)');
+  
+  var result = searchOnStreetParking(lat, lon);
+  Logger.log(result);
+  Logger.log('=== 測試完成 ===');
+  
+  return result;
+}
+
+/**
+ * 測試停車場查詢
+ * 使用台北車站座標
+ */
+function testParkingLot() {
+  var lat = 25.047924;
+  var lon = 121.517081;
+  
+  Logger.log('=== 測試停車場查詢 ===');
+  Logger.log('座標: ' + lat + ', ' + lon + ' (台北車站)');
+  
+  var result = searchNearbyParking(lat, lon);
+  Logger.log(result);
+  Logger.log('=== 測試完成 ===');
+  
+  return result;
+}
+
+/**
+ * 測試完整回覆（模擬 LINE 位置訊息）
+ * 使用台北車站座標
+ */
+function testFullResponse() {
+  var lat = 25.047924;
+  var lon = 121.517081;
+  
+  Logger.log('=== 測試完整回覆 ===');
+  Logger.log('座標: ' + lat + ', ' + lon + ' (台北車站)');
+  
+  var onStreetResult = searchOnStreetParking(lat, lon);
+  var parkingResult = searchNearbyParking(lat, lon);
+  
+  var responseText = '📍 停車資訊查詢結果\n\n' + 
+                     '🚗 路邊停車格 (1000m內)\n' + onStreetResult + 
+                     '\n━━━━━━━━━━━━━━━━\n\n' +
+                     '🏢 停車場 (1000m內)\n' + parkingResult;
+  
+  Logger.log(responseText);
+  Logger.log('=== 測試完成 ===');
+  
+  return responseText;
+}
+
+/**
+ * 測試 TDX API 認證
+ */
+function testAuthentication() {
+  Logger.log('=== 測試 TDX API 認證 ===');
+  
+  try {
+    var token = authenticateTDX();
+    
+    if (token && token.length > 0) {
+      Logger.log('✅ 認證成功');
+      Logger.log('Token 長度: ' + token.length);
+      Logger.log('Token 前10字元: ' + token.substring(0, 10) + '...');
+      return true;
+    } else {
+      Logger.log('❌ 認證失敗: Token 為空');
+      return false;
+    }
+  } catch (error) {
+    Logger.log('❌ 認證失敗: ' + error.toString());
+    return false;
+  }
+}
+
+/**
+ * 測試距離計算
+ */
+function testDistanceCalculation() {
+  Logger.log('=== 測試距離計算 ===');
+  
+  // 台北車站到台北101
+  var lat1 = 25.047924;
+  var lon1 = 121.517081;
+  var lat2 = 25.033964;
+  var lon2 = 121.564472;
+  
+  var distance = calculateDistance(lat1, lon1, lat2, lon2);
+  
+  Logger.log('起點: 台北車站 (' + lat1 + ', ' + lon1 + ')');
+  Logger.log('終點: 台北101 (' + lat2 + ', ' + lon2 + ')');
+  Logger.log('距離: ' + distance.toFixed(2) + ' km');
+  Logger.log('預期: 約 4.5 km');
+  
+  return distance;
+}
+
+/**
+ * 測試不同地點
+ * 可自訂座標
+ */
+function testCustomLocation() {
+  // 修改這裡的座標來測試不同地點
+  var lat = 25.063132;  // 預設：中山區
+  var lon = 121.500218;
+  
+  Logger.log('=== 測試自訂地點 ===');
+  Logger.log('座標: ' + lat + ', ' + lon);
+  
+  var result = testFullResponse();
+  
+  return result;
+}
+
+/**
+ * 執行所有測試
+ */
+function runAllTests() {
+  Logger.log('========================================');
+  Logger.log('開始執行所有測試');
+  Logger.log('========================================\n');
+  
+  // 測試 1: API 認證
+  testAuthentication();
+  Logger.log('\n');
+  
+  // 測試 2: 距離計算
+  testDistanceCalculation();
+  Logger.log('\n');
+  
+  // 測試 3: 路邊停車格
+  testOnStreetParking();
+  Logger.log('\n');
+  
+  // 測試 4: 停車場
+  testParkingLot();
+  Logger.log('\n');
+  
+  // 測試 5: 完整回覆
+  testFullResponse();
+  Logger.log('\n');
+  
+  Logger.log('========================================');
+  Logger.log('所有測試完成');
+  Logger.log('========================================');
+}
+
