@@ -9,7 +9,7 @@ var TDX_CLIENT_ID = PropertiesService.getScriptProperties().getProperty('TDX_CLI
 var TDX_CLIENT_SECRET = PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_SECRET') || 'YOUR_TDX_CLIENT_SECRET';
 
 var AUTH_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
-var BASE_URL = 'https://tdx.transportdata.tw/api/advanced/v1';
+var BASE_URL = 'https://tdx.transportdata.tw/api/basic/v2';  // 改用 basic API v2
 var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
 
 // ==================== LINE Webhook ====================
@@ -127,7 +127,7 @@ function authenticateTDX() {
 function searchNearbyParking(lat, lon) {
   try {
     var token = authenticateTDX();
-    var url = BASE_URL + '/Parking/OffStreet/CarPark/NearBy';
+    var url = BASE_URL + '/Parking/OffStreet/CarPark/City/NewTaipei';  // 或用 NearBy
     var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=5';
     
@@ -210,7 +210,7 @@ function searchNearbyParking(lat, lon) {
 function searchOnStreetParking(lat, lon) {
   try {
     var token = authenticateTDX();
-    var url = BASE_URL + '/Parking/OnStreet/ParkingSegment/NearBy';
+    var url = BASE_URL + '/Parking/OnStreet/ParkingSpace/City/NewTaipei';  // 改用 City API
     var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=10';
     
