@@ -1,0 +1,188 @@
+[project]
+name = "papaking"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiodns>=3.5.0",
+ "aiohttp>=3.13.2",
+ "loguru>=0.7.3",
+ "msgspec>=0.19.0",
+ "sanic",
+]
+
+# ----------------------------------------
+# 頂層全域設定：Python 版本、行長、預覽與自動修復 相關功能都可以去官網查詢：https://docs.astral.sh/ruff
+# ----------------------------------------
+[tool.ruff]
+target-version = "py313" # 適用於 lint 與 format 的目標 Python 版本
+line-length = 144 # 適用於 lint 與 format 的最大行長
+preview = true # 是否啟用尚在預覽階段的功能
+# fix = true # 自動套用可修復的 lint 規則
+unsafe-fixes = true # 允許套用可能有風險的不安全自動修復
+respect-gitignore = true # 遵循 .gitignore，跳過被忽略的檔案或資料夾
+
+# src=["src"]
+# ----------------------------------------
+# Lint 規則設定
+# ----------------------------------------
+[tool.ruff.lint]
+select = ["ALL"] # 啟用所有檢查規則
+ignore = [
+  "ANN001", # 函式參數未標註型別
+  "ANN002", # *args 未標註型別
+  "ANN003", # **kwargs 未標註型別
+  "ANN201", # 公開函式未標註回傳型別
+  "ANN202", # 私有函式未標註回傳型別
+  "ANN204", # 特殊方法未標註回傳型別
+  "ANN205", # static method 未標註回傳型別
+  "B905", # zip 未加 strict=True
+  "BLE001", # except 不可直接捕獲 Exception
+  "C901", # 過度複雜的函式（圈複雜度過高）
+  "COM812", # 參數結尾缺逗號
+  "D100", # 公開模組未寫 docstring
+  "D101", # 公開類別未寫 docstring
+  "D102", # 公開方法未寫 docstring
+  "D103", # 公開函式未寫 docstring
+  "D105", # 魔術方法未寫 docstring
+  "D107", # __init__ 未寫 docstring
+  "D200", # 單行 docstring 必須與引號同一行
+  "D203",
+  "D205", # docstring 摘要與描述間需空一行
+  "D212", # 多行 docstring 摘要應寫在第一行
+  "D400", # docstring 首行結尾需標點符號
+  "D407", # docstring 區段標題下方需虛線
+  "D410", # docstring 區段標題下方需空行
+  "D413", # docstring 最後一個區段後需空行
+  "D415", # docstring 首行結尾需句號、問號或驚嘆號
+  "D417", # docstring 缺少參數說明
+  "DTZ005", # datetime.now() 未帶時區參數
+  "DTZ006", # 禁用 datetime.utcnow()
+  "E501", # 程式碼行長超過限制
+  "E731", # 禁止 lambda 指派給變數，請用 def
+  "EM101", # raise 未加 from 例外來源
+  "EM102", # raise 例外訊息不可用 f-string
+  "ERA001", # 程式碼被註解掉
+  #"F401",    # 模組已匯入但未使用
+  # "F841", # 變數宣告但未被使用
+  "FBT001", # 函式參數不可用布林型態作為位置參數
+  "FBT002", # 函式預設參數不可直接給布林值
+  "FBT003", # 呼叫函式時布林值不可直接傳位置參數
+  "FIX002", # TODO 註解未處理
+  "G004", # logger 記錄訊息不可用 f-string
+  "INP001", # 缺少 __init__.py（隱式命名空間）
+  # "N801", # 類別名稱未用駝峰式命名
+  # "N806", # 函式內變數未用小寫
+  "PLR0911", # return 敘述過多
+  "PLR0912", # 分支判斷過多
+  "PLR0913", # 參數數量過多
+  "PLR0915", # 敘述行數過多
+  "PLR2004", # 直接在比較中寫死數字
+  "PLW2901", # for 迴圈覆蓋外部變數
+  "PT013", # pytest.raises() 不可與 with 混用
+  "PTH123", # open() 請改用 Path.open()
+  "RUF001", # 字串含易混淆 unicode 字元
+  "RUF002", # docstring 含易混淆 unicode 字元
+  "RUF003", # 註解含易混淆 unicode 字元
+  "RUF018", # assert 內不可用 := 指派運算式
+  "S324", # 禁用 MD5 等不安全雜湊
+  "SLF001", # 不可存取私有屬性
+  "T201", # 禁用 print
+  "TD002", # TODO 註解需標註作者
+  "TD003", # TODO 註解需附上 issue 連結
+  "TRY003", # 例外訊息請寫在 Exception 類別內
+  "TRY300", # 禁用 raise from None
+  "TRY301", # 禁用 raise from None
+  "UP035", # typing.Iterable 請改用 collections.abc.Iterable
+  "W292", # 檔案結尾需換行
+  "S311", # random lib
+  "PLC0415", # `import` should be at the top-level of a file
+  "TRY301", # TRY301 Abstract `raise` to an inner function
+  "TRY002", # Create your own exception"
+  "B904", #Within an `except` clause, raise exceptions with `raise
+  "S101", # 空白行不可有空白字元
+  # "S101",  # 禁用 assert
+  # "S105",  # 禁用硬編碼密碼
+  # "S320",  # 禁用 lxml 等 XML 漏洞
+  "DOC201",
+  "CPY001",
+  "DOC201",
+  "DOC501",
+  "E262",
+  "PLR0914",
+  "PLR6301",
+  "PLR0917",
+  "S404",
+  "PLR1702",
+]
+# fixable = ["ALL"] # 允許自動修復的規則
+exclude = [
+  # 排除不做檢查的資料夾/檔案（可選）
+  ".git",
+  ".venv",
+  "build",
+  "dist",
+  "node_modules",
+  "mypy.ini",
+  "tests/",
+  "test/",
+  "docs/",
+  "examples/",
+  "streamlit",
+]
+dummy-variable-rgx = "^(_.*|dummy)$" # 允許特定形式的未使用變數命名
+
+[tool.pyrefly]
+project-includes = ["src_poc"]
+site-package-path = ["src_poc", ".venv/lib/python3.13/site-packages"]
+python-version = "3.13"
+python-platform = "linux"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"] # __init__.py 中允許未使用的 import
+"tests/*" = [
+  "D100",
+  "D101",
+  "DTZ001"
+] # 測試目錄忽略公用模組與類別缺少 docstring
+"conftest.py" = [
+  "D100",
+  "D101",
+  "DTZ001"
+] # 測試目錄忽略公用模組與類別缺少 docstring
+"test_*.py" = ["S101", "PT018"] # 測試檔案允許使用 assert，並保留複合條件
+"validation_utils.py" = [
+  "S101",
+  "PT018"
+] # 測試檔案允許使用 assert，並保留複合條件
+"api_test/*" = ["S101", "PT018"] # 測試檔案允許使用 assert，並保留複合條件
+"api_test_model.py" = [
+  "N815"
+] # 忽略 api_test_model.py 中的 N815 錯誤（不符合命名規則）
+".*legacy/*" = ["ALL"]
+"sanic_app.py" = ["RUF029"]
+"starlette_app.py" = ["RUF029"]
+
+# ----------------------------------------
+# plugins 與 sub-tools 設定
+# ----------------------------------------
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12 # 限制函式圈複雜度
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false # pytest fixture 不強制括號
+
+# ----------------------------------------
+# 格式化設定
+# ----------------------------------------
+[tool.ruff.format]
+indent-style = "space" # 縮排方式：space 或 tab
+quote-style = "double" # 字串引號：double 或 single
+line-ending = "auto" # 換行符號：auto、lf 或 crlf
+skip-magic-trailing-comma = false # 是否略過自動加入的逗號
+docstring-code-format = false # docstring 內程式碼是否格式化
+docstring-code-line-length = "dynamic" # docstring 內程式碼行長策略
