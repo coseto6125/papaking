@@ -456,7 +456,7 @@ function testCoordinateInput() {
 function testLocationMessage() {
   // 測試位置訊息回應（同時查詢停車場和路邊停車格）
   var parkingResult = searchNearbyParking(25.063132, 121.500218);
-  var onStreetResult = searchOnStreetParkingByCoordinate(25.063132, 121.500218);
+  // var onStreetResult = searchOnStreetParkingByCoordinate(25.063132, 121.500218);
   
   var combined = '📍 位置查詢結果\n\n' + 
                  '🏢 停車場資訊：\n' + parkingResult + 
