@@ -1,0 +1,5008 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "NTPC OpenData API",
+        "description": "",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "https://data.ntpc.gov.tw",
+            "description": "Generated server url"
+        }
+    ],
+    "paths": {
+        "/api/datasets/34b402a8-53d9-483d-9406-24a682c2d6dc/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "公車站位資訊",
+                "description": "新北市各公車站位、行經各站位路線資訊。",
+                "operationId": "get_34b402a8_53d9_483d_9406_24a682c2d6dc_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/34b402a8-53d9-483d-9406-24a682c2d6dc/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "公車站位資訊",
+                "description": "新北市各公車站位、行經各站位路線資訊。",
+                "operationId": "get_34b402a8_53d9_483d_9406_24a682c2d6dc_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/34b402a8-53d9-483d-9406-24a682c2d6dc/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "公車站位資訊",
+                "description": "新北市各公車站位、行經各站位路線資訊。",
+                "operationId": "get_34b402a8_53d9_483d_9406_24a682c2d6dc_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0ee4e6bf-cee6-4ec8-8fe1-71f544015127/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "公車路線清單",
+                "description": "新北市公車路線清單。",
+                "operationId": "get_0ee4e6bf_cee6_4ec8_8fe1_71f544015127_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0ee4e6bf-cee6-4ec8-8fe1-71f544015127/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "公車路線清單",
+                "description": "新北市公車路線清單。",
+                "operationId": "get_0ee4e6bf_cee6_4ec8_8fe1_71f544015127_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0ee4e6bf-cee6-4ec8-8fe1-71f544015127/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "公車路線清單",
+                "description": "新北市公車路線清單。",
+                "operationId": "get_0ee4e6bf_cee6_4ec8_8fe1_71f544015127_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/07f7ccb3-ed00-43c4-966d-08e9dab24e95/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "公車預估到站時間",
+                "description": "有關公車業者、路線清單及站位資訊，可參考「新北市市轄公車業者營運基本資料」、「公車路線清單」及「公車站位資訊」資料集，有提供各資料欄位清單及代碼，方便識別。",
+                "operationId": "get_07f7ccb3_ed00_43c4_966d_08e9dab24e95_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/07f7ccb3-ed00-43c4-966d-08e9dab24e95/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "公車預估到站時間",
+                "description": "有關公車業者、路線清單及站位資訊，可參考「新北市市轄公車業者營運基本資料」、「公車路線清單」及「公車站位資訊」資料集，有提供各資料欄位清單及代碼，方便識別。",
+                "operationId": "get_07f7ccb3_ed00_43c4_966d_08e9dab24e95_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/07f7ccb3-ed00-43c4-966d-08e9dab24e95/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "公車預估到站時間",
+                "description": "有關公車業者、路線清單及站位資訊，可參考「新北市市轄公車業者營運基本資料」、「公車路線清單」及「公車站位資訊」資料集，有提供各資料欄位清單及代碼，方便識別。",
+                "operationId": "get_07f7ccb3_ed00_43c4_966d_08e9dab24e95_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/56a94101-0196-48d6-8363-58c9fd5968fa/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "快速、跳蛙、跨區幹線公車轉乘優惠路線",
+                "description": "快速、跳蛙、跨區幹線公車轉乘優惠路線。",
+                "operationId": "get_56a94101_0196_48d6_8363_58c9fd5968fa_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/56a94101-0196-48d6-8363-58c9fd5968fa/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "快速、跳蛙、跨區幹線公車轉乘優惠路線",
+                "description": "快速、跳蛙、跨區幹線公車轉乘優惠路線。",
+                "operationId": "get_56a94101_0196_48d6_8363_58c9fd5968fa_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/56a94101-0196-48d6-8363-58c9fd5968fa/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "快速、跳蛙、跨區幹線公車轉乘優惠路線",
+                "description": "快速、跳蛙、跨區幹線公車轉乘優惠路線。",
+                "operationId": "get_56a94101_0196_48d6_8363_58c9fd5968fa_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/75abd5e2-5454-4c59-973f-ba587ef94ccd/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市交通限高資訊",
+                "description": "提供本市限高資訊參考",
+                "operationId": "get_75abd5e2_5454_4c59_973f_ba587ef94ccd_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/75abd5e2-5454-4c59-973f-ba587ef94ccd/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市交通限高資訊",
+                "description": "提供本市限高資訊參考",
+                "operationId": "get_75abd5e2_5454_4c59_973f_ba587ef94ccd_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/75abd5e2-5454-4c59-973f-ba587ef94ccd/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市交通限高資訊",
+                "description": "提供本市限高資訊參考",
+                "operationId": "get_75abd5e2_5454_4c59_973f_ba587ef94ccd_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公共自行車租賃系統(YouBike2.0)",
+                "description": "為提升市民使用新北市公共自行車租賃系統(YouBike2.0)服務品質，透過資料透明化，提供各資訊平台介接取得系統服務即時資訊，滿足市民第一哩及最後ㄧ哩公共運輸需求。",
+                "operationId": "get_010e5b15_3823_4b20_b401_b1cf000550c5_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公共自行車租賃系統(YouBike2.0)",
+                "description": "為提升市民使用新北市公共自行車租賃系統(YouBike2.0)服務品質，透過資料透明化，提供各資訊平台介接取得系統服務即時資訊，滿足市民第一哩及最後ㄧ哩公共運輸需求。",
+                "operationId": "get_010e5b15_3823_4b20_b401_b1cf000550c5_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公共自行車租賃系統(YouBike2.0)",
+                "description": "為提升市民使用新北市公共自行車租賃系統(YouBike2.0)服務品質，透過資料透明化，提供各資訊平台介接取得系統服務即時資訊，滿足市民第一哩及最後ㄧ哩公共運輸需求。",
+                "operationId": "get_010e5b15_3823_4b20_b401_b1cf000550c5_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e09b35a5-a738-48cc-b0f5-570b67ad9c78/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公有路外停車場即時賸餘車位數",
+                "description": " 一、可參考/對應「新北市路外公共停車場資訊」，此靜態資料。  二、本項資料，每3分鐘更新1次。  三、欄位說明：  PARK:某停車場資料  ID:停車場編號  AVAILABLE:停車場目前之剩餘（汽車）車位數；  部分停車場因更換營運廠商，尚無提供即時車位，其顯示數值將為-9。",
+                "operationId": "get_e09b35a5_a738_48cc_b0f5_570b67ad9c78_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e09b35a5-a738-48cc-b0f5-570b67ad9c78/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公有路外停車場即時賸餘車位數",
+                "description": " 一、可參考/對應「新北市路外公共停車場資訊」，此靜態資料。  二、本項資料，每3分鐘更新1次。  三、欄位說明：  PARK:某停車場資料  ID:停車場編號  AVAILABLE:停車場目前之剩餘（汽車）車位數；  部分停車場因更換營運廠商，尚無提供即時車位，其顯示數值將為-9。",
+                "operationId": "get_e09b35a5_a738_48cc_b0f5_570b67ad9c78_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e09b35a5-a738-48cc-b0f5-570b67ad9c78/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公有路外停車場即時賸餘車位數",
+                "description": " 一、可參考/對應「新北市路外公共停車場資訊」，此靜態資料。  二、本項資料，每3分鐘更新1次。  三、欄位說明：  PARK:某停車場資料  ID:停車場編號  AVAILABLE:停車場目前之剩餘（汽車）車位數；  部分停車場因更換營運廠商，尚無提供即時車位，其顯示數值將為-9。",
+                "operationId": "get_e09b35a5_a738_48cc_b0f5_570b67ad9c78_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1016bb4c-e8eb-4113-a2be-657fb51a1558/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。",
+                "operationId": "get_1016bb4c_e8eb_4113_a2be_657fb51a1558_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1016bb4c-e8eb-4113-a2be-657fb51a1558/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。",
+                "operationId": "get_1016bb4c_e8eb_4113_a2be_657fb51a1558_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1016bb4c-e8eb-4113-a2be-657fb51a1558/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。",
+                "operationId": "get_1016bb4c_e8eb_4113_a2be_657fb51a1558_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/45572534-e503-4ece-afea-54440bf2624a/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-一般公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(一般公車)",
+                "operationId": "get_45572534_e503_4ece_afea_54440bf2624a_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/45572534-e503-4ece-afea-54440bf2624a/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-一般公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(一般公車)",
+                "operationId": "get_45572534_e503_4ece_afea_54440bf2624a_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/45572534-e503-4ece-afea-54440bf2624a/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-一般公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(一般公車)",
+                "operationId": "get_45572534_e503_4ece_afea_54440bf2624a_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/8732f6a7-c226-4ebd-ab0c-fca42b981b5c/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-快速公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(快速公車)",
+                "operationId": "get_8732f6a7_c226_4ebd_ab0c_fca42b981b5c_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/8732f6a7-c226-4ebd-ab0c-fca42b981b5c/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-快速公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(快速公車)",
+                "operationId": "get_8732f6a7_c226_4ebd_ab0c_fca42b981b5c_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/8732f6a7-c226-4ebd-ab0c-fca42b981b5c/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-快速公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(快速公車)",
+                "operationId": "get_8732f6a7_c226_4ebd_ab0c_fca42b981b5c_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/99fa69ea-24bf-4580-877a-998eb2cc42c2/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-捷運先導公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(捷運先導公車)",
+                "operationId": "get_99fa69ea_24bf_4580_877a_998eb2cc42c2_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/99fa69ea-24bf-4580-877a-998eb2cc42c2/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-捷運先導公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(捷運先導公車)",
+                "operationId": "get_99fa69ea_24bf_4580_877a_998eb2cc42c2_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/99fa69ea-24bf-4580-877a-998eb2cc42c2/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-捷運先導公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(捷運先導公車)",
+                "operationId": "get_99fa69ea_24bf_4580_877a_998eb2cc42c2_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/807b1c1f-29e7-499b-950e-257164e5fc54/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-捷運接駁路線",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(捷運接駁路線)",
+                "operationId": "get_807b1c1f_29e7_499b_950e_257164e5fc54_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/807b1c1f-29e7-499b-950e-257164e5fc54/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-捷運接駁路線",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(捷運接駁路線)",
+                "operationId": "get_807b1c1f_29e7_499b_950e_257164e5fc54_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/807b1c1f-29e7-499b-950e-257164e5fc54/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-捷運接駁路線",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(捷運接駁路線)",
+                "operationId": "get_807b1c1f_29e7_499b_950e_257164e5fc54_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e4c58656-22d1-4bcf-af33-16ca94532a36/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-新巴士",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(新巴士)",
+                "operationId": "get_e4c58656_22d1_4bcf_af33_16ca94532a36_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e4c58656-22d1-4bcf-af33-16ca94532a36/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-新巴士",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(新巴士)",
+                "operationId": "get_e4c58656_22d1_4bcf_af33_16ca94532a36_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e4c58656-22d1-4bcf-af33-16ca94532a36/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-新巴士",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(新巴士)",
+                "operationId": "get_e4c58656_22d1_4bcf_af33_16ca94532a36_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0c8bfb41-4014-4e09-bfb3-129a65103fb7/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-活動專車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(活動專車)",
+                "operationId": "get_0c8bfb41_4014_4e09_bfb3_129a65103fb7_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0c8bfb41-4014-4e09-bfb3-129a65103fb7/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-活動專車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(活動專車)",
+                "operationId": "get_0c8bfb41_4014_4e09_bfb3_129a65103fb7_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0c8bfb41-4014-4e09-bfb3-129a65103fb7/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-活動專車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(活動專車)",
+                "operationId": "get_0c8bfb41_4014_4e09_bfb3_129a65103fb7_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/f5e9a430-f337-476f-801e-dc167a112aa2/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-跳蛙公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(跳蛙公車)",
+                "operationId": "get_f5e9a430_f337_476f_801e_dc167a112aa2_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/f5e9a430-f337-476f-801e-dc167a112aa2/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-跳蛙公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(跳蛙公車)",
+                "operationId": "get_f5e9a430_f337_476f_801e_dc167a112aa2_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/f5e9a430-f337-476f-801e-dc167a112aa2/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-跳蛙公車",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(跳蛙公車)",
+                "operationId": "get_f5e9a430_f337_476f_801e_dc167a112aa2_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0358b481-a8ce-45ac-a40f-50cd6c895683/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市公車路線說明及示意圖-輕軌接駁路線",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(輕軌接駁路線)",
+                "operationId": "get_0358b481_a8ce_45ac_a40f_50cd6c895683_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0358b481-a8ce-45ac-a40f-50cd6c895683/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市公車路線說明及示意圖-輕軌接駁路線",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(輕軌接駁路線)",
+                "operationId": "get_0358b481_a8ce_45ac_a40f_50cd6c895683_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/0358b481-a8ce-45ac-a40f-50cd6c895683/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市公車路線說明及示意圖-輕軌接駁路線",
+                "description": "本資料集採不定時更新，如有路線異動時，將適時修正相關內容及示意圖。(輕軌接駁路線)",
+                "operationId": "get_0358b481_a8ce_45ac_a40f_50cd6c895683_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e5a6cf13-d00f-4680-ace4-826bfc3f4506/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市境內計程車客運服務業經營派遣業務業者相關資訊",
+                "description": "本資料內含新北市境內計程車客運服務業經營派遣業務業者名稱與叫車電話",
+                "operationId": "get_e5a6cf13_d00f_4680_ace4_826bfc3f4506_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e5a6cf13-d00f-4680-ace4-826bfc3f4506/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市境內計程車客運服務業經營派遣業務業者相關資訊",
+                "description": "本資料內含新北市境內計程車客運服務業經營派遣業務業者名稱與叫車電話",
+                "operationId": "get_e5a6cf13_d00f_4680_ace4_826bfc3f4506_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e5a6cf13-d00f-4680-ace4-826bfc3f4506/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市境內計程車客運服務業經營派遣業務業者相關資訊",
+                "description": "本資料內含新北市境內計程車客運服務業經營派遣業務業者名稱與叫車電話",
+                "operationId": "get_e5a6cf13_d00f_4680_ace4_826bfc3f4506_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e3c0e87e-dcdb-41fc-9f21-38402dde2ad9/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市境內颱風期間可供停車之路段一覽表",
+                "description": "新北市境內颱風期間可供停車之路段一覽表。",
+                "operationId": "get_e3c0e87e_dcdb_41fc_9f21_38402dde2ad9_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e3c0e87e-dcdb-41fc-9f21-38402dde2ad9/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市境內颱風期間可供停車之路段一覽表",
+                "description": "新北市境內颱風期間可供停車之路段一覽表。",
+                "operationId": "get_e3c0e87e_dcdb_41fc_9f21_38402dde2ad9_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e3c0e87e-dcdb-41fc-9f21-38402dde2ad9/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市境內颱風期間可供停車之路段一覽表",
+                "description": "新北市境內颱風期間可供停車之路段一覽表。",
+                "operationId": "get_e3c0e87e_dcdb_41fc_9f21_38402dde2ad9_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/153122ff-1cfa-49f0-b451-50f5aceb71d9/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市婦幼停車位",
+                "description": "孕婦及育有六歲以下兒童者之停車位",
+                "operationId": "get_153122ff_1cfa_49f0_b451_50f5aceb71d9_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/153122ff-1cfa-49f0-b451-50f5aceb71d9/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市婦幼停車位",
+                "description": "孕婦及育有六歲以下兒童者之停車位",
+                "operationId": "get_153122ff_1cfa_49f0_b451_50f5aceb71d9_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/153122ff-1cfa-49f0-b451-50f5aceb71d9/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市婦幼停車位",
+                "description": "孕婦及育有六歲以下兒童者之停車位",
+                "operationId": "get_153122ff_1cfa_49f0_b451_50f5aceb71d9_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/f0be6de4-e5ea-4390-baf5-27582d5cfe68/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市市轄公車業者營運基本資料",
+                "description": "新北市公車業者名稱電話等資料。",
+                "operationId": "get_f0be6de4_e5ea_4390_baf5_27582d5cfe68_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/f0be6de4-e5ea-4390-baf5-27582d5cfe68/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市市轄公車業者營運基本資料",
+                "description": "新北市公車業者名稱電話等資料。",
+                "operationId": "get_f0be6de4_e5ea_4390_baf5_27582d5cfe68_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/f0be6de4-e5ea-4390-baf5-27582d5cfe68/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市市轄公車業者營運基本資料",
+                "description": "新北市公車業者名稱電話等資料。",
+                "operationId": "get_f0be6de4_e5ea_4390_baf5_27582d5cfe68_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/75dd0899-d1cc-4e32-87ed-edbd1e01394e/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市建築物交通影響評估",
+                "description": "新北市建築物交通影響評估相關檔案檢核表",
+                "operationId": "get_75dd0899_d1cc_4e32_87ed_edbd1e01394e_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/75dd0899-d1cc-4e32-87ed-edbd1e01394e/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市建築物交通影響評估",
+                "description": "新北市建築物交通影響評估相關檔案檢核表",
+                "operationId": "get_75dd0899_d1cc_4e32_87ed_edbd1e01394e_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/75dd0899-d1cc-4e32-87ed-edbd1e01394e/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市建築物交通影響評估",
+                "description": "新北市建築物交通影響評估相關檔案檢核表",
+                "operationId": "get_75dd0899_d1cc_4e32_87ed_edbd1e01394e_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1994216a-ea78-4ca5-b876-0ff45bf9d78f/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市拖吊保管場資訊",
+                "description": "新北市拖吊保管場資訊，欲查詢愛車是否違規被拖吊，請利用違規車輛拖吊查詢系統(https://parkweb.traffic.ntpc.gov.tw/)各場服務時間：早上7時至晚上24時。拖吊時間：平日為早上7時至晚上21時，假日為早上8時至晚上21時。",
+                "operationId": "get_1994216a_ea78_4ca5_b876_0ff45bf9d78f_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1994216a-ea78-4ca5-b876-0ff45bf9d78f/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市拖吊保管場資訊",
+                "description": "新北市拖吊保管場資訊，欲查詢愛車是否違規被拖吊，請利用違規車輛拖吊查詢系統(https://parkweb.traffic.ntpc.gov.tw/)各場服務時間：早上7時至晚上24時。拖吊時間：平日為早上7時至晚上21時，假日為早上8時至晚上21時。",
+                "operationId": "get_1994216a_ea78_4ca5_b876_0ff45bf9d78f_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1994216a-ea78-4ca5-b876-0ff45bf9d78f/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市拖吊保管場資訊",
+                "description": "新北市拖吊保管場資訊，欲查詢愛車是否違規被拖吊，請利用違規車輛拖吊查詢系統(https://parkweb.traffic.ntpc.gov.tw/)各場服務時間：早上7時至晚上24時。拖吊時間：平日為早上7時至晚上21時，假日為早上8時至晚上21時。",
+                "operationId": "get_1994216a_ea78_4ca5_b876_0ff45bf9d78f_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/157501bf-f1cd-4838-92a7-612770351e43/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市政府交通局CCTV點位",
+                "description": "新北市政府交通局CCTV點位及設備編號",
+                "operationId": "get_157501bf_f1cd_4838_92a7_612770351e43_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/157501bf-f1cd-4838-92a7-612770351e43/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市政府交通局CCTV點位",
+                "description": "新北市政府交通局CCTV點位及設備編號",
+                "operationId": "get_157501bf_f1cd_4838_92a7_612770351e43_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/157501bf-f1cd-4838-92a7-612770351e43/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市政府交通局CCTV點位",
+                "description": "新北市政府交通局CCTV點位及設備編號",
+                "operationId": "get_157501bf_f1cd_4838_92a7_612770351e43_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/357b88f7-947e-4f65-b966-c6a40d434fbe/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市政府交通局etag點位",
+                "description": "新北市交通局etag點位資料及設備編號",
+                "operationId": "get_357b88f7_947e_4f65_b966_c6a40d434fbe_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/357b88f7-947e-4f65-b966-c6a40d434fbe/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市政府交通局etag點位",
+                "description": "新北市交通局etag點位資料及設備編號",
+                "operationId": "get_357b88f7_947e_4f65_b966_c6a40d434fbe_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/357b88f7-947e-4f65-b966-c6a40d434fbe/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市政府交通局etag點位",
+                "description": "新北市交通局etag點位資料及設備編號",
+                "operationId": "get_357b88f7_947e_4f65_b966_c6a40d434fbe_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/c18f02cf-47b7-4ced-98df-ce9a56d28262/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市政府路邊收費停管場",
+                "description": "新北市政府交通局7處路邊收費停管場地址及連絡電話。",
+                "operationId": "get_c18f02cf_47b7_4ced_98df_ce9a56d28262_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/c18f02cf-47b7-4ced-98df-ce9a56d28262/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市政府路邊收費停管場",
+                "description": "新北市政府交通局7處路邊收費停管場地址及連絡電話。",
+                "operationId": "get_c18f02cf_47b7_4ced_98df_ce9a56d28262_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/c18f02cf-47b7-4ced-98df-ce9a56d28262/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市政府路邊收費停管場",
+                "description": "新北市政府交通局7處路邊收費停管場地址及連絡電話。",
+                "operationId": "get_c18f02cf_47b7_4ced_98df_ce9a56d28262_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/68243cc9-706e-4bf5-96ba-979e0b90d1aa/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市機車停車彎資訊",
+                "description": "新北市轄區機車停車彎資訊",
+                "operationId": "get_68243cc9_706e_4bf5_96ba_979e0b90d1aa_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/68243cc9-706e-4bf5-96ba-979e0b90d1aa/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市機車停車彎資訊",
+                "description": "新北市轄區機車停車彎資訊",
+                "operationId": "get_68243cc9_706e_4bf5_96ba_979e0b90d1aa_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/68243cc9-706e-4bf5-96ba-979e0b90d1aa/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市機車停車彎資訊",
+                "description": "新北市轄區機車停車彎資訊",
+                "operationId": "get_68243cc9_706e_4bf5_96ba_979e0b90d1aa_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/78761eba-7774-4763-aaf0-693fd1657a09/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市自行車架(29區行政區)",
+                "description": "新北市29區行政區自行車架(不含捷運站周邊)",
+                "operationId": "get_78761eba_7774_4763_aaf0_693fd1657a09_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/78761eba-7774-4763-aaf0-693fd1657a09/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市自行車架(29區行政區)",
+                "description": "新北市29區行政區自行車架(不含捷運站周邊)",
+                "operationId": "get_78761eba_7774_4763_aaf0_693fd1657a09_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/78761eba-7774-4763-aaf0-693fd1657a09/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市自行車架(29區行政區)",
+                "description": "新北市29區行政區自行車架(不含捷運站周邊)",
+                "operationId": "get_78761eba_7774_4763_aaf0_693fd1657a09_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/baaa2058-f504-47c2-a124-56f2f5fa987f/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市自行車架(捷運站週邊)",
+                "description": "新北市捷運站周邊自行車架(不含新北市29區行政區)",
+                "operationId": "get_baaa2058_f504_47c2_a124_56f2f5fa987f_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/baaa2058-f504-47c2-a124-56f2f5fa987f/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市自行車架(捷運站週邊)",
+                "description": "新北市捷運站周邊自行車架(不含新北市29區行政區)",
+                "operationId": "get_baaa2058_f504_47c2_a124_56f2f5fa987f_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/baaa2058-f504-47c2-a124-56f2f5fa987f/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市自行車架(捷運站週邊)",
+                "description": "新北市捷運站周邊自行車架(不含新北市29區行政區)",
+                "operationId": "get_baaa2058_f504_47c2_a124_56f2f5fa987f_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/a409e68a-9155-4c87-a535-6c3c3ba3815d/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市自行車道建設統計資料(新)",
+                "description": "提供新北市已完成自行車道、路線、里程資料及完工期程(民國年月)",
+                "operationId": "get_a409e68a_9155_4c87_a535_6c3c3ba3815d_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/a409e68a-9155-4c87-a535-6c3c3ba3815d/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市自行車道建設統計資料(新)",
+                "description": "提供新北市已完成自行車道、路線、里程資料及完工期程(民國年月)",
+                "operationId": "get_a409e68a_9155_4c87_a535_6c3c3ba3815d_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/a409e68a-9155-4c87-a535-6c3c3ba3815d/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市自行車道建設統計資料(新)",
+                "description": "提供新北市已完成自行車道、路線、里程資料及完工期程(民國年月)",
+                "operationId": "get_a409e68a_9155_4c87_a535_6c3c3ba3815d_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/b1464ef0-9c7c-4a6f-abf7-6bdf32847e68/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市路外公共停車場資訊",
+                "description": "提供本市領有停車場登記證之路外停車場之基本資訊(如：停車場名稱、地址、車格位數、費率、座標)",
+                "operationId": "get_b1464ef0_9c7c_4a6f_abf7_6bdf32847e68_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/b1464ef0-9c7c-4a6f-abf7-6bdf32847e68/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市路外公共停車場資訊",
+                "description": "提供本市領有停車場登記證之路外停車場之基本資訊(如：停車場名稱、地址、車格位數、費率、座標)",
+                "operationId": "get_b1464ef0_9c7c_4a6f_abf7_6bdf32847e68_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/b1464ef0-9c7c-4a6f-abf7-6bdf32847e68/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市路外公共停車場資訊",
+                "description": "提供本市領有停車場登記證之路外停車場之基本資訊(如：停車場名稱、地址、車格位數、費率、座標)",
+                "operationId": "get_b1464ef0_9c7c_4a6f_abf7_6bdf32847e68_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1e548c60-0b04-4507-bf60-f3be651db642/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市路邊停車場身心障礙停車格",
+                "description": "新北市各行政區路邊停車場身心障礙停車格",
+                "operationId": "get_1e548c60_0b04_4507_bf60_f3be651db642_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1e548c60-0b04-4507-bf60-f3be651db642/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市路邊停車場身心障礙停車格",
+                "description": "新北市各行政區路邊停車場身心障礙停車格",
+                "operationId": "get_1e548c60_0b04_4507_bf60_f3be651db642_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/1e548c60-0b04-4507-bf60-f3be651db642/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市路邊停車場身心障礙停車格",
+                "description": "新北市各行政區路邊停車場身心障礙停車格",
+                "operationId": "get_1e548c60_0b04_4507_bf60_f3be651db642_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/54a507c4-c038-41b5-bf60-bbecb9d052c6/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市路邊停車空位查詢",
+                "description": "提供新北市路邊停車位即時車格狀態",
+                "operationId": "get_54a507c4_c038_41b5_bf60_bbecb9d052c6_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/54a507c4-c038-41b5-bf60-bbecb9d052c6/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市路邊停車空位查詢",
+                "description": "提供新北市路邊停車位即時車格狀態",
+                "operationId": "get_54a507c4_c038_41b5_bf60_bbecb9d052c6_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/54a507c4-c038-41b5-bf60-bbecb9d052c6/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市路邊停車空位查詢",
+                "description": "提供新北市路邊停車位即時車格狀態",
+                "operationId": "get_54a507c4_c038_41b5_bf60_bbecb9d052c6_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/a676af8e-d143-4d7a-95fe-99bb8db5bca0/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市路邊收費停車場停車欠費查詢",
+                "description": "提供新北市路邊收費停車場1年內停車欠費查詢。",
+                "operationId": "get_a676af8e_d143_4d7a_95fe_99bb8db5bca0_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/a676af8e-d143-4d7a-95fe-99bb8db5bca0/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市路邊收費停車場停車欠費查詢",
+                "description": "提供新北市路邊收費停車場1年內停車欠費查詢。",
+                "operationId": "get_a676af8e_d143_4d7a_95fe_99bb8db5bca0_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/a676af8e-d143-4d7a-95fe-99bb8db5bca0/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市路邊收費停車場停車欠費查詢",
+                "description": "提供新北市路邊收費停車場1年內停車欠費查詢。",
+                "operationId": "get_a676af8e_d143_4d7a_95fe_99bb8db5bca0_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/d9f18db5-41c7-41d4-b7f0-82a335255b08/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市路邊收費停車場收費路段資訊",
+                "description": "包含板橋、新莊、三重、永和、中和、新店、土城、海山、蘆洲、樹林、鶯歌、三峽、汐止、林口、淡水、八里等地區路邊收費停車場收費路段資訊",
+                "operationId": "get_d9f18db5_41c7_41d4_b7f0_82a335255b08_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/d9f18db5-41c7-41d4-b7f0-82a335255b08/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市路邊收費停車場收費路段資訊",
+                "description": "包含板橋、新莊、三重、永和、中和、新店、土城、海山、蘆洲、樹林、鶯歌、三峽、汐止、林口、淡水、八里等地區路邊收費停車場收費路段資訊",
+                "operationId": "get_d9f18db5_41c7_41d4_b7f0_82a335255b08_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/d9f18db5-41c7-41d4-b7f0-82a335255b08/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市路邊收費停車場收費路段資訊",
+                "description": "包含板橋、新莊、三重、永和、中和、新店、土城、海山、蘆洲、樹林、鶯歌、三峽、汐止、林口、淡水、八里等地區路邊收費停車場收費路段資訊",
+                "operationId": "get_d9f18db5_41c7_41d4_b7f0_82a335255b08_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/76cc13df-c199-41d9-9067-f491fe7edc14/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市車輛行車事故鑑定分類統計",
+                "description": "一、本資料為新北市車輛行車事故鑑定案件依申請方式分類之統計。二、本項資料，每季更新1次。",
+                "operationId": "get_76cc13df_c199_41d9_9067_f491fe7edc14_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/76cc13df-c199-41d9-9067-f491fe7edc14/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市車輛行車事故鑑定分類統計",
+                "description": "一、本資料為新北市車輛行車事故鑑定案件依申請方式分類之統計。二、本項資料，每季更新1次。",
+                "operationId": "get_76cc13df_c199_41d9_9067_f491fe7edc14_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/76cc13df-c199-41d9-9067-f491fe7edc14/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市車輛行車事故鑑定分類統計",
+                "description": "一、本資料為新北市車輛行車事故鑑定案件依申請方式分類之統計。二、本項資料，每季更新1次。",
+                "operationId": "get_76cc13df_c199_41d9_9067_f491fe7edc14_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/3caa93a5-eac9-4068-8da3-ba3a64a1a6e4/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市車輛行車事故鑑定覆議情形",
+                "description": "新北市車輛行車事故鑑定覆議情形。",
+                "operationId": "get_3caa93a5_eac9_4068_8da3_ba3a64a1a6e4_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/3caa93a5-eac9-4068-8da3-ba3a64a1a6e4/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市車輛行車事故鑑定覆議情形",
+                "description": "新北市車輛行車事故鑑定覆議情形。",
+                "operationId": "get_3caa93a5_eac9_4068_8da3_ba3a64a1a6e4_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/3caa93a5-eac9-4068-8da3-ba3a64a1a6e4/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市車輛行車事故鑑定覆議情形",
+                "description": "新北市車輛行車事故鑑定覆議情形。",
+                "operationId": "get_3caa93a5_eac9_4068_8da3_ba3a64a1a6e4_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e49c2335-9938-4a9b-8425-188a39e1368c/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市通用（無障礙）計程車營運數據",
+                "description": "新北市通用（無障礙）計程車車輛數與營運數據",
+                "operationId": "get_e49c2335_9938_4a9b_8425_188a39e1368c_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e49c2335-9938-4a9b-8425-188a39e1368c/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市通用（無障礙）計程車營運數據",
+                "description": "新北市通用（無障礙）計程車車輛數與營運數據",
+                "operationId": "get_e49c2335_9938_4a9b_8425_188a39e1368c_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/e49c2335-9938-4a9b-8425-188a39e1368c/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市通用（無障礙）計程車營運數據",
+                "description": "新北市通用（無障礙）計程車車輛數與營運數據",
+                "operationId": "get_e49c2335_9938_4a9b_8425_188a39e1368c_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/5a9f461f-0c4b-47eb-b578-48329cb1f9b0/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "新北市道路交通安全會報會議紀錄",
+                "description": "新北市道路交通安全會報會議紀錄。",
+                "operationId": "get_5a9f461f_0c4b_47eb_b578_48329cb1f9b0_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/5a9f461f-0c4b-47eb-b578-48329cb1f9b0/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "新北市道路交通安全會報會議紀錄",
+                "description": "新北市道路交通安全會報會議紀錄。",
+                "operationId": "get_5a9f461f_0c4b_47eb_b578_48329cb1f9b0_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/5a9f461f-0c4b-47eb-b578-48329cb1f9b0/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "新北市道路交通安全會報會議紀錄",
+                "description": "新北市道路交通安全會報會議紀錄。",
+                "operationId": "get_5a9f461f_0c4b_47eb_b578_48329cb1f9b0_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/2924fbe5-852f-46f4-a829-45becd75eff5/csv": {
+            "get": {
+                "tags": [
+                    "CSV"
+                ],
+                "summary": "時段性管制禁止大貨車行駛路段",
+                "description": "時段性管制禁止大貨車行駛路段新增",
+                "operationId": "get_2924fbe5_852f_46f4_a829_45becd75eff5_csv",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "text/csv;charset=UTF-8": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/2924fbe5-852f-46f4-a829-45becd75eff5/json": {
+            "get": {
+                "tags": [
+                    "JSON"
+                ],
+                "summary": "時段性管制禁止大貨車行駛路段",
+                "description": "時段性管制禁止大貨車行駛路段新增",
+                "operationId": "get_2924fbe5_852f_46f4_a829_45becd75eff5_json",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/datasets/2924fbe5-852f-46f4-a829-45becd75eff5/xml": {
+            "get": {
+                "tags": [
+                    "XML"
+                ],
+                "summary": "時段性管制禁止大貨車行駛路段",
+                "description": "時段性管制禁止大貨車行駛路段新增",
+                "operationId": "get_2924fbe5_852f_46f4_a829_45becd75eff5_xml",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "頁碼(0..N)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "每頁筆數",
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

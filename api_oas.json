@@ -1,0 +1,909 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "停車資訊",
+        "description": "<span>本平臺提供涵蓋全國尺度之路外、路邊等停車動靜態資料服務API，歡迎各產政學單位介接使用。\n<br/>後續將持續擴充各縣市、各港埠、各機場、各軌道場站、各觀光風景區、各高速公路休息站之停車場動靜態資料。\n<br/>利用本平臺開放資料進行各項應用服務開發時，請考量不同特性使用者(如：性別/身心障礙/老幼等)的需求，並歡迎回饋寶貴意見。\n<br>計費方式：\n<br>計次：200次/1點\n<br>計量：20MB/1點\n---\n##### API使用說明與注意事項：\n1. 如您尚未註冊平臺會員帳號，或未以帳號登入，您將僅能以「訪客模式」使用平臺服務，包含：限以瀏覽器存取，限使用`【基礎服務】`，且限制每個呼叫來源端IP每日存取至多20次。。\n2. 如您已註冊平臺會員帳號，請務必確保在存取服務(包含瀏覽器、程式呼叫API)時帶入您的API金鑰，方能以「會員模式」使用完整平臺服務，包含平臺各類資料服務，如`【基礎服務】`、`【進階服務】`、`【加值服務】`、`【歷史服務】`、`【圖資服務】`、`【第三方服務】`等。\n3. 建議您立即[註冊平臺會員帳號](/register)，依您用量需求訂閱服務方案，並於[【會員中心->資料服務->API金鑰】](/user/dataservice/key)取得API金鑰(即Client Id和Client Secret資訊)。\n4. 會員訂閱服務方案之級別不同，將決定其API金鑰之存取頻率有不同限制，各個方案的存取頻率限制說明請參考[訂閱收費](/pricing)。\n5. 以瀏覽器帶入API金鑰之操作方式：請點選Swagger UI上的Authorize按鈕，依指示填入Client Id和Client Secret資訊並進行驗證，驗證完成後可開始於Swagger UI使用API。\n6. 以程式呼叫API帶入API金鑰之操作方式：請參考[範例程式](https://github.com/tdxmotc/SampleCode)。\n7. 不論您是以瀏覽器或是以程式呼叫API，所有服務存取行為均將被記錄並定期檢視，以確保系統資源使用的合理分配與避免遭受濫用。\n\nAPI OAS文本 :[請點我](https://tdx.transportdata.tw/webapi/File/Swagger/V3/10187099-9e74-43d8-9bad-c60118e6baba)",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "https://tdx.transportdata.tw/api/advanced"
+        }
+    ],
+    "paths": {
+        "/v1/Parking/OffStreet/CarPark/NearBy": {
+            "get": {
+                "tags": [
+                    "Parking Advanced(Near By)"
+                ],
+                "summary": "取得指定[位置,範圍]的全臺路外停車場基本資料",
+                "operationId": "ParkingApi_CarParkNearBy",
+                "parameters": [
+                    {
+                        "name": "$select",
+                        "in": "query",
+                        "description": "挑選",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$filter",
+                        "in": "query",
+                        "description": "過濾",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$orderby",
+                        "in": "query",
+                        "description": "排序",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$top",
+                        "in": "query",
+                        "description": "取前幾筆",
+                        "schema": {
+                            "type": "integer",
+                            "default": 30
+                        }
+                    },
+                    {
+                        "name": "$skip",
+                        "in": "query",
+                        "description": "跳過前幾筆",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$spatialFilter",
+                        "in": "query",
+                        "description": "空間過濾(最大搜尋半徑為1000公尺)，語法為 nearby({Lat},{Lon},{DistanceInMeters})，例如 nearby(25.047675, 121.517055, 100)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$format",
+                        "in": "query",
+                        "description": "指定來源格式",
+                        "required": true,
+                        "schema": {
+                            "enum": [
+                                "JSON",
+                                "XML"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Array",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.CarPark"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "title": "Array",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.CarPark"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/Parking/OnStreet/ParkingSpot/NearBy": {
+            "get": {
+                "tags": [
+                    "Parking Advanced(Near By)"
+                ],
+                "summary": "取得指定[位置,範圍]的全臺路邊停車格基本資料",
+                "operationId": "ParkingApi_ParkingSpotNearBy",
+                "parameters": [
+                    {
+                        "name": "$select",
+                        "in": "query",
+                        "description": "挑選",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$filter",
+                        "in": "query",
+                        "description": "過濾",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$orderby",
+                        "in": "query",
+                        "description": "排序",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$top",
+                        "in": "query",
+                        "description": "取前幾筆",
+                        "schema": {
+                            "type": "integer",
+                            "default": 30
+                        }
+                    },
+                    {
+                        "name": "$skip",
+                        "in": "query",
+                        "description": "跳過前幾筆",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$spatialFilter",
+                        "in": "query",
+                        "description": "空間過濾(最大搜尋半徑為1000公尺)，語法為 nearby({Lat},{Lon},{DistanceInMeters})，例如 nearby(25.047675, 121.517055, 100)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "$format",
+                        "in": "query",
+                        "description": "指定來源格式",
+                        "required": true,
+                        "schema": {
+                            "enum": [
+                                "JSON",
+                                "XML"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Array",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.ParkingSegmentSpot"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "title": "Array",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.ParkingSegmentSpot"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "PTX.Service.DTO.Parking.Specification.V1.CarPark": {
+                "title": "CarPark",
+                "required": [
+                    "Address",
+                    "CarParkID",
+                    "CarParkName",
+                    "CarParkPosition",
+                    "CarParkRegNo",
+                    "CarParkType",
+                    "ChargeTypes",
+                    "City",
+                    "CityCode",
+                    "Description",
+                    "Email",
+                    "EVRechargingAvailable",
+                    "FareDescription",
+                    "GasStation",
+                    "Gated",
+                    "IsFreeParkingOutOfHours",
+                    "IsPublic",
+                    "Lighting",
+                    "LiveOccuppancyAvailable",
+                    "MonthlyTicketAvailable",
+                    "OperationType",
+                    "OperatorID",
+                    "OvernightPermitted",
+                    "ParkingGuideType",
+                    "ParkingSiteTypes",
+                    "ParkingTypes",
+                    "ProhibitedForAnyHazardousMaterialLoads",
+                    "ReservationAvailable",
+                    "Restaurant",
+                    "SeasonTicketAvailable",
+                    "SecureParking",
+                    "SecurityGuard",
+                    "Shop",
+                    "Supervision",
+                    "Telephone",
+                    "TicketMachine",
+                    "TicketOffice",
+                    "Toilet",
+                    "TownID",
+                    "TownName",
+                    "WheelchairAccessible"
+                ],
+                "type": "object",
+                "properties": {
+                    "CarParkID": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "業管機關訂定之停車場代碼",
+                        "xml": {
+                            "name": "CarParkID"
+                        }
+                    },
+                    "CarParkName": {
+                        "title": "NameType",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PTX.Service.DTO.Shared.Specification.V3.Base.NameType"
+                            }
+                        ],
+                        "description": "停車場名稱",
+                        "xml": {
+                            "name": "NameType"
+                        }
+                    },
+                    "CarParkShortName": {
+                        "title": "NameType",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PTX.Service.DTO.Shared.Specification.V3.Base.NameType"
+                            }
+                        ],
+                        "description": "停車場簡稱",
+                        "xml": {
+                            "name": "NameType"
+                        }
+                    },
+                    "CarParkRegNo": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "停車場登記證號",
+                        "xml": {
+                            "name": "CarParkRegNo"
+                        }
+                    },
+                    "OperatorID": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "營運業者代碼",
+                        "xml": {
+                            "name": "OperatorID"
+                        }
+                    },
+                    "Geometry": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "停車場空間範圍(WKT)",
+                        "xml": {
+                            "name": "Geometry"
+                        }
+                    },
+                    "Description": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "停車場綜合描述",
+                        "xml": {
+                            "name": "Description"
+                        }
+                    },
+                    "CarParkType": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "停車場類型 : [1:'平面',2:'立體',3:'地下',4:'立體停車塔',5:'立體機械式',6:'同時涵蓋2種以上',254:'其他',255:'未知']"
+                    },
+                    "ParkingGuideType": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "停車導引類型 : [1:'自行找尋停車位',2:'有導引輔助設施協助尋找停車位',3:'人工導引停找車位',4:'代客泊車',5:'混合型',254:'其他',255:'未知']"
+                    },
+                    "ParkingAreas": {
+                        "title": "Array",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.ParkingArea"
+                        },
+                        "description": "停車場區域",
+                        "xml": {
+                            "name": "List`1"
+                        }
+                    },
+                    "ParkingTypes": {
+                        "title": "Array",
+                        "type": "array",
+                        "items": {
+                            "title": "Int32",
+                            "type": "integer",
+                            "description": "[1:'停車轉乘公共運輸',2:'臨時停車接送',3:'停車後轉使用公共自行車',4:'停車後步行',5:'活動專用停車場',6:'休息站專用停車場',7:'服務區專用停車場',8:'貨車及大型車停車場',9:'共享汽車租用服務停車場',10:'共乘服務停車場',254:'其他',255:'未知']"
+                        },
+                        "description": "停車類型資訊: [1:'停車轉乘公共運輸',2:'臨時停車接送',3:'停車後轉使用公共自行車',4:'停車後步行',5:'活動專用停車場',6:'休息站專用停車場',7:'服務區專用停車場',8:'貨車及大型車停車場',9:'共享汽車租用服務停車場',10:'共乘服務停車場',254:'其他',255:'未知']",
+                        "xml": {
+                            "name": "List`1"
+                        }
+                    },
+                    "ParkingSiteTypes": {
+                        "title": "Array",
+                        "type": "array",
+                        "items": {
+                            "title": "Int32",
+                            "type": "integer",
+                            "description": "[1:'軌道場站',2:'機場場站',3:'船舶場站',4:'商圈',5:'餐廳',6:'運動場',7:'飯店',8:'觀光地標',9:'電影院',10:'觀光景點',11:'學校',12:'美術博物館',13:'展覽中心',14:'會議中心',15:'宗教機構',16:'賣場',17:'動物園',18:'高速公路',19:'政府部門',20:'住宅區',21:'夜市',22:'市場',23:'公園',254:'其他',255:'未知']"
+                        },
+                        "description": "停車場服務類型資訊: [1:'軌道場站',2:'機場場站',3:'船舶場站',4:'商圈',5:'餐廳',6:'運動場',7:'飯店',8:'觀光地標',9:'電影院',10:'觀光景點',11:'學校',12:'美術博物館',13:'展覽中心',14:'會議中心',15:'宗教機構',16:'賣場',17:'動物園',18:'高速公路',19:'政府部門',20:'住宅區',21:'夜市',22:'市場',23:'公園',254:'其他',255:'未知']",
+                        "xml": {
+                            "name": "List`1"
+                        }
+                    },
+                    "ChargeTypes": {
+                        "title": "Array",
+                        "type": "array",
+                        "items": {
+                            "title": "Int32",
+                            "type": "integer",
+                            "description": "[1:'計時',2:'計次',3:'月租',4:'免費',254:'其他',255:'未知']"
+                        },
+                        "description": "停車場收費方式: [1:'計時',2:'計次',3:'月租',4:'免費',254:'其他',255:'未知']",
+                        "xml": {
+                            "name": "List`1"
+                        }
+                    },
+                    "Telephone": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "停車場連絡電話",
+                        "xml": {
+                            "name": "Telephone"
+                        }
+                    },
+                    "EmergencyPhone": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "緊急連絡電話",
+                        "xml": {
+                            "name": "EmergencyPhone"
+                        }
+                    },
+                    "CarParkPosition": {
+                        "title": "PointType",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.PointType"
+                            }
+                        ],
+                        "description": "代表點坐標",
+                        "xml": {
+                            "name": "PointType"
+                        }
+                    },
+                    "Email": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "電子信箱",
+                        "xml": {
+                            "name": "Email"
+                        }
+                    },
+                    "Address": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "停車場地址",
+                        "xml": {
+                            "name": "Address"
+                        }
+                    },
+                    "ImageURLs": {
+                        "title": "Array",
+                        "type": "array",
+                        "items": {
+                            "title": "String",
+                            "type": "string",
+                            "xml": {}
+                        },
+                        "description": "停車場照片",
+                        "xml": {
+                            "name": "List`1"
+                        }
+                    },
+                    "WebURL": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "官網網址",
+                        "xml": {
+                            "name": "WebURL"
+                        }
+                    },
+                    "FareURL": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "票價資訊網址",
+                        "xml": {
+                            "name": "FareURL"
+                        }
+                    },
+                    "FareDescription": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "票價資訊文字描述",
+                        "xml": {
+                            "name": "FareDescription"
+                        }
+                    },
+                    "SpecialOfferDescription": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "優惠費率文字說明",
+                        "xml": {
+                            "name": "SpecialOfferDescription"
+                        }
+                    },
+                    "IsFreeParkingOutOfHours": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否在營業時間外不收費 : [0:'否',1:'是']"
+                    },
+                    "VehicleRestriction": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "車輛限制文字描述",
+                        "xml": {
+                            "name": "VehicleRestriction"
+                        }
+                    },
+                    "IsPublic": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否為公有停車場 : [0:'否',1:'是']"
+                    },
+                    "IsMotorcycle": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否為機車停車場 : [0:'否',1:'是']"
+                    },
+                    "OperationType": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "營運種類 : [1:'公辦民營',2:'公辦公營',3:'私有民營']"
+                    },
+                    "LiveOccuppancyAvailable": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有提供動態剩餘車位資訊 : [0:'否',1:'是']"
+                    },
+                    "EVRechargingAvailable": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有電動車充電設施 : [0:'否',1:'是']"
+                    },
+                    "MonthlyTicketAvailable": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有提供月票服務 : [0:'否',1:'是']"
+                    },
+                    "SeasonTicketAvailable": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有提供季票服務 : [0:'否',1:'是']"
+                    },
+                    "ReservationAvailable": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有提供預約停車服務 : [0:'否',1:'是']"
+                    },
+                    "ReservationURL": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "預約網址",
+                        "xml": {
+                            "name": "ReservationURL"
+                        }
+                    },
+                    "ReservationDescription": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "預約資訊文字描述",
+                        "xml": {
+                            "name": "ReservationDescription"
+                        }
+                    },
+                    "WheelchairAccessible": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有無障礙設施 : [0:'否',1:'是']"
+                    },
+                    "OvernightPermitted": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否允許停車過夜 : [0:'否',1:'是']"
+                    },
+                    "TicketMachine": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有自動售票機 : [0:'否',1:'是']"
+                    },
+                    "Toilet": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有廁所 : [0:'否',1:'是']"
+                    },
+                    "Restaurant": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有餐廳 : [0:'否',1:'是']"
+                    },
+                    "GasStation": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有加油站 : [0:'否',1:'是']"
+                    },
+                    "Shop": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有商店 : [0:'否',1:'是']"
+                    },
+                    "Gated": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有閘口 : [0:'否',1:'是']"
+                    },
+                    "Lighting": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有照明設施 : [0:'否',1:'是']"
+                    },
+                    "SecureParking": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否停車安全有保障 : [0:'否',1:'是']"
+                    },
+                    "TicketOffice": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有售票處 : [0:'否',1:'是']"
+                    },
+                    "ProhibitedForAnyHazardousMaterialLoads": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否允許於停車場區域內裝卸危險物品 : [0:'否',1:'是']"
+                    },
+                    "SecurityGuard": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有管理人員 : [0:'否',1:'是']"
+                    },
+                    "Supervision": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否有監視系統 : [0:'否',1:'是']"
+                    },
+                    "SupervisionType": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "監視系統類型 : [1:'CCTV',2:'CCTV和IVA',254:'其他',255:'未知']"
+                    },
+                    "LandMark": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "停車場附近的地標/地物",
+                        "xml": {
+                            "name": "LandMark"
+                        }
+                    },
+                    "BuildingName": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "停車場所在大樓名稱",
+                        "xml": {
+                            "name": "BuildingName"
+                        }
+                    },
+                    "LocationMapURL": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "停車場位置圖網址",
+                        "xml": {
+                            "name": "LocationMapURL"
+                        }
+                    },
+                    "City": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "所在城市(英文)",
+                        "xml": {
+                            "name": "City"
+                        }
+                    },
+                    "CityCode": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "所在城市代碼",
+                        "xml": {
+                            "name": "CityCode"
+                        }
+                    },
+                    "TownName": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "所在行政區(鄉鎮區)(中文)",
+                        "xml": {
+                            "name": "TownName"
+                        }
+                    },
+                    "TownID": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "所在行政區(鄉鎮區)代碼",
+                        "xml": {
+                            "name": "TownID"
+                        }
+                    }
+                },
+                "xml": {
+                    "name": "CarPark"
+                }
+            },
+            "PTX.Service.DTO.Parking.Specification.V1.CarPark0": {
+                "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.CarPark"
+            },
+            "PTX.Service.DTO.Parking.Specification.V1.ParkingArea": {
+                "title": "ParkingArea",
+                "required": [
+                    "ParkingAreaID",
+                    "ParkingAreaName",
+                    "ParkingTypes"
+                ],
+                "type": "object",
+                "properties": {
+                    "ParkingAreaID": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "停車場區域代碼",
+                        "xml": {
+                            "name": "ParkingAreaID"
+                        }
+                    },
+                    "ParkingAreaName": {
+                        "title": "NameType",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PTX.Service.DTO.Shared.Specification.V3.Base.NameType"
+                            }
+                        ],
+                        "description": "停車場區域名稱",
+                        "xml": {
+                            "name": "NameType"
+                        }
+                    },
+                    "ParkingTypes": {
+                        "title": "Array",
+                        "type": "array",
+                        "items": {
+                            "title": "Int32",
+                            "type": "integer",
+                            "description": "[1:'停車轉乘公共運輸',2:'臨時停車接送',3:'停車後轉使用公共自行車',4:'停車後步行',5:'活動專用停車場',6:'休息站專用停車場',7:'服務區專用停車場',8:'貨車及大型車停車場',9:'共享汽車租用服務停車場',10:'共乘服務停車場',254:'其他',255:'未知']"
+                        },
+                        "description": "停車類型資訊",
+                        "xml": {
+                            "name": "List`1"
+                        }
+                    },
+                    "Geometry": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "停車場區域空間範圍(WKT)",
+                        "xml": {
+                            "name": "Geometry"
+                        }
+                    }
+                },
+                "xml": {
+                    "name": "ParkingArea"
+                }
+            },
+            "PTX.Service.DTO.Shared.Specification.V3.Base.NameType": {
+                "title": "NameType",
+                "type": "object",
+                "properties": {
+                    "Zh_tw": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "中文繁體名稱",
+                        "xml": {
+                            "name": "Zh_tw"
+                        }
+                    },
+                    "En": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "英文名稱",
+                        "xml": {
+                            "name": "En"
+                        }
+                    }
+                },
+                "xml": {
+                    "name": "NameType"
+                }
+            },
+            "PTX.Service.DTO.Parking.Specification.V1.PointType": {
+                "title": "PointType",
+                "required": [
+                    "PositionLat",
+                    "PositionLon"
+                ],
+                "type": "object",
+                "properties": {
+                    "PositionLat": {
+                        "type": "number",
+                        "description": "位置緯度(WGS84)",
+                        "format": "double"
+                    },
+                    "PositionLon": {
+                        "type": "number",
+                        "description": "位置經度(WGS84)",
+                        "format": "double"
+                    }
+                },
+                "xml": {
+                    "name": "PointType"
+                }
+            },
+            "PTX.Service.DTO.Parking.Specification.V1.ParkingSegmentSpot": {
+                "title": "ParkingSegmentSpot",
+                "required": [
+                    "HasChargingPoint",
+                    "ParkingSegmentID",
+                    "ParkingSpotID",
+                    "Position",
+                    "SpaceType"
+                ],
+                "type": "object",
+                "properties": {
+                    "ParkingSegmentID": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "業管機關訂定之停車路段代碼",
+                        "xml": {
+                            "name": "ParkingSegmentID"
+                        }
+                    },
+                    "ParkingSpotID": {
+                        "title": "String",
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "業管機關訂定之停車格位代碼",
+                        "xml": {
+                            "name": "ParkingSpotID"
+                        }
+                    },
+                    "Position": {
+                        "title": "PointType",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.PointType"
+                            }
+                        ],
+                        "description": "停車格代表點坐標",
+                        "xml": {
+                            "name": "PointType"
+                        }
+                    },
+                    "SpaceType": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "停車位類型 : [0:'所有停車位類型',1:'自小客車位',2:'機車位',3:'重型機車位',4:'腳踏車位',5:'大型車位',6:'小型巴士位',7:'孕婦及親子專用車位',8:'婦女車位',9:'身心障礙汽車車位',10:'身心障礙機車車位',11:'電動汽車車位',12:'電動機車車位',13:'復康巴士',14:'月租機車位',15:'月租汽車位',16:'季租機車位',17:'季租汽車位',18:'半年租機車位',19:'半年租汽車位',20:'年租機車位',21:'年租汽車位',22:'租賃機車位',23:'租賃汽車位',24:'卸貨車位',25:'計程車位',26:'夜間安心停車位',27:'臨時停車',28:'專用停車',29:'預約停車',254:'其他',255:'未知']"
+                    },
+                    "HasChargingPoint": {
+                        "title": "Int32",
+                        "type": "integer",
+                        "description": "是否附屬充電樁 : [0:'否',1:'是']"
+                    },
+                    "Geometry": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "停車格位範圍坐標",
+                        "xml": {
+                            "name": "Geometry"
+                        }
+                    },
+                    "Length": {
+                        "type": "number",
+                        "description": "停車格位長度",
+                        "format": "double"
+                    },
+                    "Width": {
+                        "type": "number",
+                        "description": "停車格位寬度",
+                        "format": "double"
+                    },
+                    "LinkID": {
+                        "title": "String",
+                        "type": "string",
+                        "description": "路段基礎編碼",
+                        "xml": {
+                            "name": "LinkID"
+                        }
+                    }
+                },
+                "xml": {
+                    "name": "ParkingSegmentSpot"
+                }
+            },
+            "PTX.Service.DTO.Parking.Specification.V1.ParkingSegmentSpot1": {
+                "$ref": "#/components/schemas/PTX.Service.DTO.Parking.Specification.V1.ParkingSegmentSpot"
+            }
+        },
+        "securitySchemes": {
+            "TDX": {
+                "type": "oauth2",
+                "description": "TDX會員可至【會員專區-資料服務-服務金鑰】功能頁面，從預設金鑰(或建立新的金鑰)取得Client Id和Client Secret資訊，分別輸入至下方client_id和client_secret欄位、按下Authorize按鈕，即可開始於Swagger介面呼叫TDX API。",
+                "flows": {
+                    "clientCredentials": {
+                        "tokenUrl": "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token",
+                        "scopes": {}
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {
+            "TDX": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Parking Advanced(Near By)",
+            "description": "停車進階(指定位置及範圍)"
+        }
+    ]
+}
