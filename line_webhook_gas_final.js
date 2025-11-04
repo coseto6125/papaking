@@ -131,10 +131,22 @@ function queryOnStreet(lat, lon) {
       return '目前沒有查詢到路邊停車格';
     }
     
+    // 只保留小客車停車格 (SpaceType = 1)
+    var carSpots = [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].SpaceType === 1) {
+        carSpots.push(items[i]);
+      }
+    }
+    
+    if (carSpots.length === 0) {
+      return '目前沒有查詢到小客車停車格';
+    }
+    
     // 將停車格依 ParkingSegmentID 群組
     var segments = {};
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
+    for (var i = 0; i < carSpots.length; i++) {
+      var item = carSpots[i];
       var segId = item.ParkingSegmentID || 'unknown';
       
       if (!segments[segId]) {
@@ -157,25 +169,13 @@ function queryOnStreet(lat, lon) {
       var spotCount = seg.spots.length;
       var pos = seg.position;
       
-      // 停車位類型
-      var types = {};
-      for (var j = 0; j < seg.spots.length; j++) {
-        var type = seg.spots[j].SpaceType || 255;
-        types[type] = (types[type] || 0) + 1;
-      }
-      var typeStr = '';
-      if (types[1]) typeStr += '小客車' + types[1] + '格 ';
-      if (types[2]) typeStr += '機車' + types[2] + '格 ';
-      
       result += '【' + (i + 1) + '】路段 ' + segId + '\n';
-      result += '🅿️ 共 ' + spotCount + ' 格';
-      if (typeStr) result += ' (' + typeStr.trim() + ')';
-      result += '\n';
+      result += '🅿️ 共 ' + spotCount + ' 格（小客車）\n';
       
       if (pos && pos.PositionLat && pos.PositionLon) {
         var distance = calculateDistance(lat, lon, pos.PositionLat, pos.PositionLon);
-        result += '📍 ' + distance.toFixed(2) + 'km | ';
-        result += 'maps.google.com/?q=' + pos.PositionLat + ',' + pos.PositionLon;
+        result += '📍 ' + distance.toFixed(2) + 'km\n';
+        result += '🗺️ https://www.google.com/maps?q=' + pos.PositionLat + ',' + pos.PositionLon;
       }
       result += '\n\n';
     }
