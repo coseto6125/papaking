@@ -127,6 +127,11 @@ function queryOnStreet(lat, lon) {
     
     var items = JSON.parse(response.getContentText());
     
+    // Debug: 顯示第一筆資料的所有欄位
+    if (items && items.length > 0) {
+      Logger.log('路邊停車格第一筆資料: ' + JSON.stringify(items[0]));
+    }
+    
     if (!items || !Array.isArray(items) || items.length === 0) {
       return '目前沒有查詢到路邊停車格';
     }
@@ -134,9 +139,12 @@ function queryOnStreet(lat, lon) {
     var result = '';
     for (var i = 0; i < Math.min(items.length, 10); i++) {
       var item = items[i];
-      var name = item.RoadSectionName || '未知路段';
-      var spaces = item.TotalSpaces || '?';
-      var charge = item.ChargeDescription || '請查看告示';
+      
+      // 嘗試多種可能的欄位名稱
+      var name = item.RoadSectionName || item.RoadName || item.StreetName || 
+                 item.ParkingSpotID || item.SpotID || '未知路段';
+      var spaces = item.TotalSpaces || item.Spaces || item.SpaceCount || '?';
+      var charge = item.ChargeDescription || item.Fee || item.Charge || '請查看告示';
       
       result += '【' + (i + 1) + '】' + name + '\n';
       result += '🅿️ ' + spaces + ' 格 | ' + charge + '\n\n';
