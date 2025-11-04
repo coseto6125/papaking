@@ -127,27 +127,61 @@ function queryOnStreet(lat, lon) {
     
     var items = JSON.parse(response.getContentText());
     
-    // Debug: 顯示第一筆資料的所有欄位
-    if (items && items.length > 0) {
-      Logger.log('路邊停車格第一筆資料: ' + JSON.stringify(items[0]));
-    }
-    
     if (!items || !Array.isArray(items) || items.length === 0) {
       return '目前沒有查詢到路邊停車格';
     }
     
-    var result = '';
-    for (var i = 0; i < Math.min(items.length, 10); i++) {
+    // 將停車格依 ParkingSegmentID 群組
+    var segments = {};
+    for (var i = 0; i < items.length; i++) {
       var item = items[i];
+      var segId = item.ParkingSegmentID || 'unknown';
       
-      // 嘗試多種可能的欄位名稱
-      var name = item.RoadSectionName || item.RoadName || item.StreetName || 
-                 item.ParkingSpotID || item.SpotID || '未知路段';
-      var spaces = item.TotalSpaces || item.Spaces || item.SpaceCount || '?';
-      var charge = item.ChargeDescription || item.Fee || item.Charge || '請查看告示';
+      if (!segments[segId]) {
+        segments[segId] = {
+          spots: [],
+          position: item.Position
+        };
+      }
+      segments[segId].spots.push(item);
+    }
+    
+    // 顯示各路段
+    var result = '';
+    var segmentList = Object.keys(segments);
+    var displayCount = Math.min(segmentList.length, 10);
+    
+    for (var i = 0; i < displayCount; i++) {
+      var segId = segmentList[i];
+      var seg = segments[segId];
+      var spotCount = seg.spots.length;
+      var pos = seg.position;
       
-      result += '【' + (i + 1) + '】' + name + '\n';
-      result += '🅿️ ' + spaces + ' 格 | ' + charge + '\n\n';
+      // 停車位類型
+      var types = {};
+      for (var j = 0; j < seg.spots.length; j++) {
+        var type = seg.spots[j].SpaceType || 255;
+        types[type] = (types[type] || 0) + 1;
+      }
+      var typeStr = '';
+      if (types[1]) typeStr += '小客車' + types[1] + '格 ';
+      if (types[2]) typeStr += '機車' + types[2] + '格 ';
+      
+      result += '【' + (i + 1) + '】路段 ' + segId + '\n';
+      result += '🅿️ 共 ' + spotCount + ' 格';
+      if (typeStr) result += ' (' + typeStr.trim() + ')';
+      result += '\n';
+      
+      if (pos && pos.PositionLat && pos.PositionLon) {
+        var distance = calculateDistance(lat, lon, pos.PositionLat, pos.PositionLon);
+        result += '📍 ' + distance.toFixed(2) + 'km | ';
+        result += 'maps.google.com/?q=' + pos.PositionLat + ',' + pos.PositionLon;
+      }
+      result += '\n\n';
+    }
+    
+    if (segmentList.length > 10) {
+      result += '... 還有 ' + (segmentList.length - 10) + ' 個路段\n';
     }
     
     return result || '目前沒有查詢到路邊停車格';
@@ -212,6 +246,18 @@ function queryParking(lat, lon) {
 }
 
 // ========== 測試函數 ==========
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  var R = 6371;
+  var toRad = function(deg) { return deg * Math.PI / 180; };
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  var c = 2 * Math.asin(Math.sqrt(a));
+  return R * c;
+}
 
 function testConfig() {
   // 直接使用全域變數
