@@ -9,8 +9,11 @@ var TDX_CLIENT_ID = PropertiesService.getScriptProperties().getProperty('TDX_CLI
 var TDX_CLIENT_SECRET = PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_SECRET') || 'YOUR_TDX_CLIENT_SECRET';
 
 var AUTH_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
-var BASE_URL = 'https://tdx.transportdata.tw/api/basic/v2';  // 改用 basic API v2
+var BASE_URL = 'https://tdx.transportdata.tw/api/basic/v2';
 var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
+
+// 啟動時檢查 BASE_URL
+Logger.log('BASE_URL is: ' + BASE_URL);
 
 // ==================== LINE Webhook ====================
 
