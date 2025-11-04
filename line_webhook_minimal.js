@@ -145,6 +145,11 @@ function searchNearbyParking(lat, lon) {
     
     Logger.log('Parking API Status: ' + statusCode);
     
+    if (statusCode === 404) {
+      Logger.log('Parking API 404: Resource Not Found');
+      return '目前沒有查詢到停車場';
+    }
+    
     if (statusCode !== 200) {
       Logger.log('Parking API Error: ' + responseText);
       return '❌ API 回應錯誤 (狀態碼: ' + statusCode + ')';
@@ -222,6 +227,11 @@ function searchOnStreetParking(lat, lon) {
     var responseText = response.getContentText();
     
     Logger.log('OnStreet API Status: ' + statusCode);
+    
+    if (statusCode === 404) {
+      Logger.log('OnStreet API 404: Resource Not Found');
+      return '目前沒有查詢到路邊停車格';
+    }
     
     if (statusCode !== 200) {
       Logger.log('OnStreet API Error: ' + responseText);
