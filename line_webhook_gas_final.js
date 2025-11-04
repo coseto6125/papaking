@@ -259,58 +259,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function getAddressFromCoords(lat, lon) {
-  try {
-    // 使用 BigDataCloud (免費、無需 API Key、較快)
-    var url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=zh';
-    
-    var options = {
-      method: 'get',
-      muteHttpExceptions: true
-    };
-    
-    var response = UrlFetchApp.fetch(url, options);
-    var responseText = response.getContentText();
-    
-    Logger.log('BigDataCloud response for ' + lat + ',' + lon + ': ' + responseText.substring(0, 200));
-    
-    var data = JSON.parse(responseText);
-    
-    if (data) {
-      // 嘗試多種欄位組合
-      var locality = data.locality || '';
-      var city = data.city || '';
-      var countrySubdivision = data.countrySubdivision || '';
-      var principalSubdivision = data.principalSubdivision || '';
-      
-      // 台灣地址組合
-      var result = '';
-      
-      // 優先使用 locality (通常是區)
-      if (locality && locality !== 'Taiwan') {
-        result = locality;
-      } else if (city && city !== 'Taiwan') {
-        result = city;
-      } else if (principalSubdivision && principalSubdivision !== 'Taiwan') {
-        result = principalSubdivision;
-        if (countrySubdivision && countrySubdivision !== principalSubdivision) {
-          result += countrySubdivision;
-        }
-      }
-      
-      if (result) {
-        return result;
-      }
-    }
-    
-    // 如果 BigDataCloud 失敗，改用座標簡化顯示
-    return '';
-    
-  } catch (error) {
-    Logger.log('Geocoding error: ' + error);
-    return '';
-  }
-}
 
 function testConfig() {
   // 直接使用全域變數
