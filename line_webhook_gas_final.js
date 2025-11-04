@@ -169,7 +169,20 @@ function queryOnStreet(lat, lon) {
       var spotCount = seg.spots.length;
       var pos = seg.position;
       
-      result += '【' + (i + 1) + '】路段 ' + segId + '\n';
+      // 取得地址（粗略）
+      var address = '';
+      if (pos && pos.PositionLat && pos.PositionLon) {
+        address = getAddressFromCoords(pos.PositionLat, pos.PositionLon);
+      }
+      
+      result += '【' + (i + 1) + '】';
+      if (address) {
+        result += address + '\n';
+        result += '路段 ' + segId + '\n';
+      } else {
+        result += '路段 ' + segId + '\n';
+      }
+      
       result += '🅿️ 共 ' + spotCount + ' 格（小客車）\n';
       
       if (pos && pos.PositionLat && pos.PositionLon) {
