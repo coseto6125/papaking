@@ -6,16 +6,15 @@
 // ========== 設定區 ==========
 // 請在 Google Apps Script 的「專案設定 > 指令碼屬性」中設定這些值
 
-function getConfig() {
-  return {
-    LINE_TOKEN: PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN') || 'YOUR_TOKEN',
-    TDX_ID: PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_ID') || 'YOUR_ID',
-    TDX_SECRET: PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_SECRET') || 'YOUR_SECRET',
-    AUTH_URL: 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token',
-    API_BASE: 'https://tdx.transportdata.tw/api/advanced/v1',
-    LINE_URL: 'https://api.line.me/v2/bot/message/reply'
-  };
-}
+var LINE_CHANNEL_ACCESS_TOKEN = 'REDACTED_LINE_CHANNEL_ACCESS_TOKEN'
+var LINE_CHANNEL_SECRET = 'REDACTED_LINE_CHANNEL_SECRET'
+var TDX_CLIENT_ID = 'REDACTED_TDX_CLIENT_ID'
+var TDX_CLIENT_SECRET = 'REDACTED_TDX_CLIENT_SECRET'
+var AUTH_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token'
+var BASE_URL = 'https://tdx.transportdata.tw/api/advanced/v1'
+var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply'
+
+
 
 // ========== LINE Webhook ==========
 
@@ -61,12 +60,12 @@ function handleLocation(event) {
 }
 
 function replyLine(token, text) {
-  var config = getConfig();
+  // 直接使用全域變數
   var options = {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + config.LINE_TOKEN
+      'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
     },
     payload: JSON.stringify({
       replyToken: token,
@@ -75,19 +74,19 @@ function replyLine(token, text) {
     muteHttpExceptions: true
   };
   
-  UrlFetchApp.fetch(config.LINE_URL, options);
+  UrlFetchApp.fetch(LINE_REPLY_URL, options);
 }
 
 // ========== TDX API ==========
 
 function getTDXToken() {
-  var config = getConfig();
+  // 直接使用全域變數
   var options = {
     method: 'post',
     payload: {
       grant_type: 'client_credentials',
-      client_id: config.TDX_ID,
-      client_secret: config.TDX_SECRET
+      client_id: TDX_CLIENT_ID,
+      client_secret: TDX_CLIENT_SECRET
     },
     muteHttpExceptions: true
   };
@@ -99,9 +98,9 @@ function getTDXToken() {
 
 function queryOnStreet(lat, lon) {
   try {
-    var config = getConfig();
+    // 直接使用全域變數
     var token = getTDXToken();
-    var url = config.API_BASE + '/Parking/OnStreet/ParkingSpot/NearBy';
+    var url = BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy';
     var query = '?$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=10';
     
@@ -153,9 +152,9 @@ function queryOnStreet(lat, lon) {
 
 function queryParking(lat, lon) {
   try {
-    var config = getConfig();
+    // 直接使用全域變數
     var token = getTDXToken();
-    var url = config.API_BASE + '/Parking/OffStreet/CarPark/NearBy';
+    var url = BASE_URL + '/Parking/OffStreet/CarPark/NearBy';
     var query = '?$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=5';
     
@@ -207,16 +206,16 @@ function queryParking(lat, lon) {
 // ========== 測試函數 ==========
 
 function testConfig() {
-  var config = getConfig();
-  Logger.log('API_BASE: ' + config.API_BASE);
+  // 直接使用全域變數
+  Logger.log('API_BASE: ' + BASE_URL);
   Logger.log('應該是: https://tdx.transportdata.tw/api/advanced/v1');
 }
 
 function testFull() {
   Logger.log('========== 開始測試 ==========');
   
-  var config = getConfig();
-  Logger.log('API Base: ' + config.API_BASE);
+  // 直接使用全域變數
+  Logger.log('API Base: ' + BASE_URL);
   
   var lat = 25.047924;
   var lon = 121.517081;
