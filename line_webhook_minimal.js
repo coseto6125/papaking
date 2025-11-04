@@ -3,15 +3,14 @@
  * 支援：停車場查詢、路邊停車格查詢
  */
 
-// 設定區
-const CONFIG = {
-  LINE_CHANNEL_ACCESS_TOKEN: PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN') || 'YOUR_CHANNEL_ACCESS_TOKEN',
-  TDX_CLIENT_ID: PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_ID') || 'YOUR_TDX_CLIENT_ID',
-  TDX_CLIENT_SECRET: PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_SECRET') || 'YOUR_TDX_CLIENT_SECRET',
-  AUTH_URL: 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token',
-  BASE_URL: 'https://tdx.transportdata.tw/api/advanced/v1',
-  LINE_REPLY_URL: 'https://api.line.me/v2/bot/message/reply'
-};
+// 設定區 - 請在指令碼屬性中設定這些值
+var LINE_CHANNEL_ACCESS_TOKEN = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN') || 'YOUR_CHANNEL_ACCESS_TOKEN';
+var TDX_CLIENT_ID = PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_ID') || 'YOUR_TDX_CLIENT_ID';
+var TDX_CLIENT_SECRET = PropertiesService.getScriptProperties().getProperty('TDX_CLIENT_SECRET') || 'YOUR_TDX_CLIENT_SECRET';
+
+var AUTH_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
+var BASE_URL = 'https://tdx.transportdata.tw/api/advanced/v1';
+var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply';
 
 // ==================== LINE Webhook ====================
 
@@ -68,7 +67,7 @@ function sendReplyMessage(replyToken, textMessage) {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + CONFIG.LINE_CHANNEL_ACCESS_TOKEN
+      'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
     },
     contentType: 'application/json',
     payload: JSON.stringify(payload),
@@ -76,7 +75,7 @@ function sendReplyMessage(replyToken, textMessage) {
   };
   
   try {
-    var response = UrlFetchApp.fetch(CONFIG.LINE_REPLY_URL, options);
+    var response = UrlFetchApp.fetch(LINE_REPLY_URL, options);
     Logger.log('Reply status: ' + response.getResponseCode());
   } catch (error) {
     Logger.log('Error sending reply: ' + error.toString());
@@ -90,14 +89,14 @@ function authenticateTDX() {
     method: 'post',
     payload: {
       grant_type: 'client_credentials',
-      client_id: CONFIG.TDX_CLIENT_ID,
-      client_secret: CONFIG.TDX_CLIENT_SECRET
+      client_id: TDX_CLIENT_ID,
+      client_secret: TDX_CLIENT_SECRET
     },
     muteHttpExceptions: true
   };
   
   try {
-    var response = UrlFetchApp.fetch(CONFIG.AUTH_URL, options);
+    var response = UrlFetchApp.fetch(AUTH_URL, options);
     var statusCode = response.getResponseCode();
     var responseText = response.getContentText();
     
@@ -128,7 +127,7 @@ function authenticateTDX() {
 function searchNearbyParking(lat, lon) {
   try {
     var token = authenticateTDX();
-    var url = CONFIG.BASE_URL + '/Parking/OffStreet/CarPark/NearBy';
+    var url = BASE_URL + '/Parking/OffStreet/CarPark/NearBy';
     var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=5';
     
@@ -187,7 +186,7 @@ function searchNearbyParking(lat, lon) {
 function searchOnStreetParking(lat, lon) {
   try {
     var token = authenticateTDX();
-    var url = CONFIG.BASE_URL + '/Parking/OnStreet/ParkingSegment/NearBy';
+    var url = BASE_URL + '/Parking/OnStreet/ParkingSegment/NearBy';
     var query = '$spatialFilter=' + encodeURIComponent('nearby(' + lat + ',' + lon + ',1000)') + 
                 '&$format=JSON&$top=10';
     
