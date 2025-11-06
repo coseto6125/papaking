@@ -10,6 +10,24 @@
 - 🗺️ **Google Maps 整合** - 一鍵導航到停車位置
 - ⚡ **雙版本實作** - Google Apps Script（無伺服器）+ Python Sanic（高效能）
 
+## 📱 功能展示
+
+<div align="center">
+  <img src="image/sample.jpg" alt="LINE Bot 使用範例" width="300"/>
+  <p><i>傳送位置後，Bot 自動回覆附近停車資訊</i></p>
+</div>
+
+**查詢結果包含：**
+- 🅿️ 路邊停車格（依路段分組）
+  - 路段編號（如：路段 KB2）
+  - 停車格數量（小客車）
+  - 距離資訊
+  - Google Maps 導航連結
+- 🏢 停車場資訊
+  - 停車場名稱
+  - 地址
+  - Google Maps 位置
+
 ## 🏗️ 專案結構
 
 ```
