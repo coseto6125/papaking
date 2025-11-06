@@ -12,7 +12,7 @@
 
 ## 🏗️ 專案結構
 
-\`\`\`
+```
 papaking/
 ├── gas/              # Google Apps Script 版本（主要實作）
 │   └── line_webhook_gas.js
@@ -24,7 +24,7 @@ papaking/
 │   └── requirements.txt
 ├── docs/             # API 規格與文件
 └── README.md
-\`\`\`
+```
 
 ## 🚀 快速開始
 
@@ -33,7 +33,7 @@ papaking/
 **優勢：** 免費託管、零維護、快速部署
 
 1. 前往 [Google Apps Script](https://script.google.com)
-2. 建立新專案，貼上 \`gas/line_webhook_gas.js\`
+2. 建立新專案，貼上 `gas/line_webhook_gas.js`
 3. 設定環境變數（LINE Token、TDX API Key）
 4. 部署為 Web App
 5. 設定 LINE Webhook URL
@@ -44,7 +44,7 @@ papaking/
 
 **適合：** 需要高度客製化或大流量場景
 
-\`\`\`bash
+```bash
 cd sanic
 pip install -r requirements.txt
 
@@ -54,7 +54,7 @@ cp ../.env.example .env
 
 # 啟動伺服器
 python line_webhook.py
-\`\`\`
+```
 
 ## 📚 完整文件
 
@@ -69,7 +69,7 @@ python line_webhook.py
 
 ## 🔑 環境變數
 
-\`\`\`bash
+```bash
 # LINE Bot 設定
 LINE_CHANNEL_ACCESS_TOKEN=your_token
 LINE_CHANNEL_SECRET=your_secret
@@ -77,7 +77,7 @@ LINE_CHANNEL_SECRET=your_secret
 # TDX API 金鑰（至 https://tdx.transportdata.tw 申請）
 CLIENT_ID=your_tdx_client_id
 CLIENT_SECRET=your_tdx_client_secret
-\`\`\`
+```
 
 ## 📋 授權條款
 
