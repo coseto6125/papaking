@@ -1,8 +1,12 @@
 [project]
 name = "papaking"
 version = "0.1.0"
-description = "Add your description here"
+description = "LINE Bot for parking information query in Taiwan using TDX API"
 readme = "README.md"
+license = {text = "CC-BY-NC-4.0"}
+authors = [
+    {name = "enorenor", email = "enorenor@gmail.com"}
+]
 requires-python = ">=3.13"
 dependencies = [
     "aiodns>=3.5.0",
@@ -11,6 +15,10 @@ dependencies = [
  "msgspec>=0.19.0",
  "sanic",
 ]
+
+[project.urls]
+Homepage = "https://github.com/coseto6125/papaking"
+Repository = "https://github.com/coseto6125/papaking"
 
 # ----------------------------------------
 # 頂層全域設定：Python 版本、行長、預覽與自動修復 相關功能都可以去官網查詢：https://docs.astral.sh/ruff
