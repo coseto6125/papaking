@@ -143,7 +143,8 @@ function handleLocation(event) {
 }
 
 // 兩個 TDX NearBy 同時發出，之後的路段表、新北資料多半命中快取。
-// 回傳兩則訊息（路邊停車格、停車場）：一個 reply token 最多可送 5 則，各自 5,000 字上限，拆開就不會互相擠壓
+// 回傳最多三則訊息（路邊停車格文字、停車場文字、有結果時再加一則 Flex carousel）：
+// 一個 reply token 最多可送 5 則，文字各自 5,000 字上限，拆開就不會互相擠壓
 function buildReply(lat, lon) {
   var city = resolveTDXCity(lat, lon);
   var radiusM = Math.round(SEARCH_RADIUS_KM * 1000);
@@ -177,7 +178,7 @@ function section(text, cards) {
 // 一張卡：{ kind, title, lines, lat, lon }。Flex 的 text 元件不能是空字串，lines 進來前就過濾掉
 function flexBubble(card) {
   var color = FLEX_COLORS[card.kind] || '#546E7A';
-  var lines = card.lines.filter(function (line) { return line; }).slice(0, 5);
+  var lines = card.lines.filter(function (line) { return line; }).slice(0, 6);
   return {
     type: 'bubble',
     size: 'kilo',
@@ -195,7 +196,7 @@ function flexBubble(card) {
       type: 'box', layout: 'vertical', paddingAll: '8px',
       contents: [{
         type: 'button', style: 'primary', height: 'sm', color: color,
-        action: { type: 'uri', label: '開車導航', uri: navLink(card.lat, card.lon).replace('🧭 ', '') }
+        action: { type: 'uri', label: '開車導航', uri: navUrl(card.lat, card.lon) }
       }]
     }
   };
@@ -985,9 +986,13 @@ function travelLine(entry) {
   return '📍 ' + entry.km.toFixed(2) + 'km';
 }
 
-// 點開直接進 Google Maps 開車導航，起點用手機目前位置
+// Google Maps 開車導航網址，起點用手機目前位置；文字版加表情符號，Flex 按鈕用裸網址
+function navUrl(lat, lon) {
+  return 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon + '&travelmode=driving';
+}
+
 function navLink(lat, lon) {
-  return '🧭 https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon + '&travelmode=driving';
+  return '🧭 ' + navUrl(lat, lon);
 }
 
 function queryOnStreet(lat, lon, city, response) {
