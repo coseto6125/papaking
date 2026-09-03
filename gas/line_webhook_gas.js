@@ -159,23 +159,82 @@ function buildReply(lat, lon) {
   var tokenResponse = needToken ? responses[2 + liveRequests.length] : null;
   var onStreet = queryOnStreet(lat, lon, city, responses[0]);
   var parking = queryParking(lat, lon, city, responses[1], tokenResponse);
-  
-  return [
-    '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet,
-    '🏢 停車場 (' + radiusM + 'm內)\n' + parking
+
+  var messages = [
+    '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet.text,
+    '🏢 停車場 (' + radiusM + 'm內)\n' + parking.text
   ];
+  var cards = onStreet.cards.slice(0, FLEX_SEGMENT_CARDS).concat(parking.cards.slice(0, FLEX_CARPARK_CARDS));
+  if (cards.length) messages.push(buildFlexCarousel(cards));
+  return messages;
+}
+
+// 兩個查詢函式共用的回傳形狀：text 是整段文字，cards 是排序後供 Flex 用的精簡資料
+function section(text, cards) {
+  return { text: text, cards: cards || [] };
+}
+
+// 一張卡：{ kind, title, lines, lat, lon }。Flex 的 text 元件不能是空字串，lines 進來前就過濾掉
+function flexBubble(card) {
+  var color = FLEX_COLORS[card.kind] || '#546E7A';
+  var lines = card.lines.filter(function (line) { return line; }).slice(0, 5);
+  return {
+    type: 'bubble',
+    size: 'kilo',
+    header: {
+      type: 'box', layout: 'vertical', backgroundColor: color, paddingAll: '8px',
+      contents: [{ type: 'text', text: card.kind, color: '#FFFFFF', size: 'xs', weight: 'bold' }]
+    },
+    body: {
+      type: 'box', layout: 'vertical', spacing: 'xs', paddingAll: '12px',
+      contents: [{ type: 'text', text: card.title.slice(0, 60), weight: 'bold', size: 'sm', wrap: true }].concat(
+        lines.map(function (line) { return { type: 'text', text: line.slice(0, 80), size: 'xs', color: '#666666', wrap: true }; })
+      )
+    },
+    footer: {
+      type: 'box', layout: 'vertical', paddingAll: '8px',
+      contents: [{
+        type: 'button', style: 'primary', height: 'sm', color: color,
+        action: { type: 'uri', label: '開車導航', uri: navLink(card.lat, card.lon).replace('🧭 ', '') }
+      }]
+    }
+  };
+}
+
+function buildFlexCarousel(cards) {
+  return {
+    type: 'flex',
+    altText: '最近的 ' + cards.length + ' 個停車選擇',
+    contents: { type: 'carousel', contents: cards.map(flexBubble) }
+  };
 }
 
 var LINE_TEXT_LIMIT = 5000
 var LINE_REPLY_MAX_MESSAGES = 5
+// 第三則訊息：Flex carousel，最近的幾筆各一張卡加「開車導航」按鈕
+var FLEX_SEGMENT_CARDS = 3
+var FLEX_CARPARK_CARDS = 2
+var FLEX_COLORS = { '路邊停車格': '#1E88E5', '停車場': '#43A047' }
 
-// texts 可為單一字串或最多 5 則的陣列；每則超過 5,000 字會被 LINE 整包拒收，寧可截尾也不要整則消失
-function replyLine(token, texts) {
-  var messages = [].concat(texts).slice(0, LINE_REPLY_MAX_MESSAGES).map(function (text) {
-    if (text.length > LINE_TEXT_LIMIT) text = text.slice(0, LINE_TEXT_LIMIT - 1) + '…';
+// items 可為單一字串、或最多 5 則的陣列，元素是字串（轉成 text 訊息）或現成的訊息物件（Flex）。
+// 每則文字超過 5,000 字會被 LINE 整包拒收，寧可截尾也不要整則消失。
+// Flex JSON 一點不合規 LINE 也是整包 400：那時退回只送文字，reply token 在成功前都還有效
+function replyLine(token, items) {
+  var messages = [].concat(items).slice(0, LINE_REPLY_MAX_MESSAGES).map(function (item) {
+    if (typeof item !== 'string') return item;
+    var text = item.length > LINE_TEXT_LIMIT ? item.slice(0, LINE_TEXT_LIMIT - 1) + '…' : item;
     return { type: 'text', text: text };
   });
-  var options = {
+  var code = postLineReply(token, messages);
+  var textOnly = messages.filter(function (m) { return m.type === 'text'; });
+  if (code === 400 && textOnly.length && textOnly.length < messages.length) {
+    Logger.log('LINE 拒收含 Flex 的回覆，改只送文字');
+    postLineReply(token, textOnly);
+  }
+}
+
+function postLineReply(token, messages) {
+  var response = UrlFetchApp.fetch(LINE_REPLY_URL, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
@@ -183,13 +242,12 @@ function replyLine(token, texts) {
     },
     payload: JSON.stringify({ replyToken: token, messages: messages }),
     muteHttpExceptions: true
-  };
-  
-  var response = UrlFetchApp.fetch(LINE_REPLY_URL, options);
+  });
   var code = response.getResponseCode();
   if (code !== 200) {
     Logger.log('LINE 回覆失敗 ' + code + ': ' + response.getContentText());
   }
+  return code;
 }
 
 // ========== TDX API ==========
@@ -939,20 +997,20 @@ function queryOnStreet(lat, lon, city, response) {
     Logger.log('路邊停車格狀態: ' + status);
     
     if (status === 404) {
-      return '目前沒有查詢到路邊停車格';
+      return section('目前沒有查詢到路邊停車格');
     }
     if (status === 429) {
-      return '⏳ 查詢人數太多，請一分鐘後再試';
+      return section('⏳ 查詢人數太多，請一分鐘後再試');
     }
-    
+
     if (status !== 200) {
-      return '❌ 查詢錯誤 (狀態: ' + status + ')';
+      return section('❌ 查詢錯誤 (狀態: ' + status + ')');
     }
-    
+
     var items = JSON.parse(response.getContentText());
-    
+
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return '目前沒有查詢到路邊停車格';
+      return section('目前沒有查詢到路邊停車格');
     }
     
     // 只保留小客車停車格 (SpaceType = 1)
@@ -964,7 +1022,7 @@ function queryOnStreet(lat, lon, city, response) {
     }
     
     if (carSpots.length === 0) {
-      return '目前沒有查詢到小客車停車格';
+      return section('目前沒有查詢到小客車停車格');
     }
     
     // 將停車格依 ParkingSegmentID 群組
@@ -992,26 +1050,30 @@ function queryOnStreet(lat, lon, city, response) {
     var info = getSegmentInfo(city);
     var displayCount = Math.min(ranked.length, 10);
     var result = '';
-    
+    var cards = [];
+
     for (var i = 0; i < displayCount; i++) {
       var entry = ranked[i];
       var fare = (info[entry.segId] || [])[2];
-      result += '【' + (i + 1) + '】' + segmentTitle(info, entry.segId) + '\n';
-      result += '🅿️ 共 ' + entry.spotCount + ' 格（小客車）\n';
-      if (fare) result += '💰 ' + fare + '\n';
+      var title = segmentTitle(info, entry.segId);
+      var spots = '🅿️ 共 ' + entry.spotCount + ' 格（小客車）';
+      var fareLine = fare ? '💰 ' + fare : '';
+      result += '【' + (i + 1) + '】' + title + '\n' + spots + '\n';
+      if (fareLine) result += fareLine + '\n';
       result += travelLine(entry) + '\n';
       result += navLink(entry.lat, entry.lon) + '\n\n';
+      cards.push({ kind: '路邊停車格', title: title, lines: [spots, fareLine, travelLine(entry)], lat: entry.lat, lon: entry.lon });
     }
-    
+
     if (ranked.length > 10) {
       result += '... 還有 ' + (ranked.length - 10) + ' 個路段\n';
     }
-    
-    return result || '目前沒有查詢到路邊停車格';
+
+    return section(result || '目前沒有查詢到路邊停車格', cards);
     
   } catch (err) {
     Logger.log('路邊停車格錯誤: ' + err);
-    return '❌ 查詢失敗';
+    return section('❌ 查詢失敗');
   }
 }
 
@@ -1034,7 +1096,7 @@ function queryParking(lat, lon, city, response, googleTokenResponse) {
         };
       });
     } else if (status !== 404 && status !== 429) {
-      return '❌ 查詢錯誤 (狀態: ' + status + ')';
+      return section('❌ 查詢錯誤 (狀態: ' + status + ')');
     }
     // 同一座常同時出現在 TDX（業者自行上傳）、市府清單和 Google；順序 TDX → 市府 → Google，先到的官方那筆優先
     entries = dedupeInto(
@@ -1043,30 +1105,34 @@ function queryParking(lat, lon, city, response, googleTokenResponse) {
     );
     
     if (!entries.length) {
-      return status === 429 ? '⏳ 查詢人數太多，請一分鐘後再試' : '目前沒有查詢到停車場';
+      return section(status === 429 ? '⏳ 查詢人數太多，請一分鐘後再試' : '目前沒有查詢到停車場');
     }
-    
+
     var ranked = rankByTravel(lat, lon, entries, DRIVE_TIME_CARPARKS).slice(0, 5);
     var result = '';
+    var cards = [];
     for (var i = 0; i < ranked.length; i++) {
       var entry = ranked[i];
+      var capacity = entry.total !== undefined
+        ? '🅿️ ' + (entry.available !== undefined ? '剩餘 ' + entry.available + ' / ' : '共 ') + entry.total + ' 格'
+        : '';
+      var fareLine = entry.fare ? '💰 ' + entry.fare : '';
+      var hoursLine = entry.hours ? '🕒 ' + entry.hours : '';
+      var sourceLine = entry.source === 'google' ? 'ℹ️ 來源 Google，無官方車格與剩餘資料' : '';
       result += '【' + (i + 1) + '】' + entry.name + '\n';
       result += '📮 ' + entry.address + '\n';
-      if (entry.total !== undefined) {
-        result += '🅿️ ' + (entry.available !== undefined ? '剩餘 ' + entry.available + ' / ' : '共 ') + entry.total + ' 格\n';
-      }
-      if (entry.fare) result += '💰 ' + entry.fare + '\n';
-      if (entry.hours) result += '🕒 ' + entry.hours + '\n';
+      [capacity, fareLine, hoursLine].forEach(function (line) { if (line) result += line + '\n'; });
       result += travelLine(entry) + '\n';
       result += navLink(entry.lat, entry.lon) + '\n';
-      if (entry.source === 'google') result += 'ℹ️ 來源 Google，無官方車格與剩餘資料\n';
+      if (sourceLine) result += sourceLine + '\n';
       result += '\n';
+      cards.push({ kind: '停車場', title: entry.name, lines: ['📮 ' + entry.address, capacity, fareLine, hoursLine, travelLine(entry), sourceLine], lat: entry.lat, lon: entry.lon });
     }
-    return result;
-    
+    return section(result, cards);
+
   } catch (err) {
     Logger.log('停車場錯誤: ' + err);
-    return '❌ 查詢失敗';
+    return section('❌ 查詢失敗');
   }
 }
 
@@ -1081,6 +1147,13 @@ function warmCaches() {
 }
 
 // ========== 測試函數 ==========
+
+// 文字訊息原樣、Flex 只印卡片數，方便在執行記錄裡看
+function describeReply(messages) {
+  return messages.map(function (m) {
+    return typeof m === 'string' ? m : '[Flex ' + m.contents.contents.length + ' 張卡]';
+  }).join('\n\n');
+}
 
 // 在編輯器執行：確認 Apps Script 的出口打得到 Google 搜尋 RPC，印出三重大有街附近找到的停車場
 function testGooglePlaces() {
@@ -1123,11 +1196,11 @@ function testFull() {
   Logger.log('API Base: ' + BASE_URL);
   
   // 三重（新北開放資料）、基隆車站（基隆開放資料）、台北車站（純 TDX）各跑一次
-  Logger.log('\n三重:\n' + buildReply(25.069, 121.478).join('\n\n'));
+  Logger.log('\n三重:\n' + describeReply(buildReply(25.069, 121.478)));
   driveTimeCallsLeft = DRIVE_TIME_BUDGET;
-  Logger.log('\n基隆車站:\n' + buildReply(25.1318, 121.7394).join('\n\n'));
+  Logger.log('\n基隆車站:\n' + describeReply(buildReply(25.1318, 121.7394)));
   driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，後面每次查詢重新給滿額才看得到開車時間
-  Logger.log('\n台北車站:\n' + buildReply(25.047924, 121.517081).join('\n\n'));
+  Logger.log('\n台北車站:\n' + describeReply(buildReply(25.047924, 121.517081)));
   
   Logger.log('========== 測試完成 ==========');
 }
