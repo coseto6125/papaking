@@ -30,7 +30,7 @@
 - `queryOnStreet()` - 查詢路邊停車格
 - `queryParking()` - 查詢停車場
 - `calculateDistance()` - 計算距離
-- `rankByTravel()` / `driveTime()` - 直線最近的前 5 個路段、前 3 個停車場再問 Google 開車時間並依時間重排
+- `rankByTravel()` / `driveTime()` - 直線最近的前 3 個路段、前 2 個停車場再問 Google 開車時間並依時間重排（同起點格到同終點快取 30 分鐘）
 - `navLink()` - 產生 Google Maps 開車導航連結（不吃配額）
 - `buildReply()` - 兩個 TDX NearBy 用 `UrlFetchApp.fetchAll` 併發，再組回覆
 - `ntpcCarparksNear()` - 新北市路外停車場改走新北開放資料（含每 3 分鐘更新的剩餘車位），座標由 TWD97 換算
@@ -47,7 +47,7 @@
 
 ## ⚠️ Google Maps 配額
 
-`Maps` 服務不用 API key，但一般 Gmail 帳號每日上限約 1,000 次 directions、1,000 次 geocoding。一次位置查詢最多 8 次 directions（5 路段 + 3 停車場）加最多 1 次 geocoding，約 125 次查詢會用完當日 directions 配額；用完後開車時間靜默退回直線距離，只有執行記錄會有「開車時間查詢失敗」。
+`Maps` 服務不用 API key，但一般 Gmail 帳號每日上限約 1,000 次 directions、1,000 次 geocoding。一次位置查詢最多 5 次 directions（3 路段 + 2 停車場）加最多 1 次 geocoding，約 200 次查詢會用完當日 directions 配額；用完後開車時間靜默退回直線距離，只有執行記錄會有「開車時間查詢失敗」。
 
 ## 🔧 測試
 
