@@ -30,6 +30,12 @@
 - `queryOnStreet()` - 查詢路邊停車格
 - `queryParking()` - 查詢停車場
 - `calculateDistance()` - 計算距離
+- `rankByTravel()` / `driveTime()` - 直線最近的前 5 個路段、前 3 個停車場再問 Google 開車時間並依時間重排
+- `navLink()` - 產生 Google Maps 開車導航連結（不吃配額）
+
+## ⚠️ Google Maps 配額
+
+`Maps` 服務不用 API key，但一般 Gmail 帳號每日上限約 1,000 次 directions、1,000 次 geocoding。一次位置查詢最多 8 次 directions（5 路段 + 3 停車場）加最多 1 次 geocoding，約 125 次查詢會用完當日 directions 配額；用完後開車時間靜默退回直線距離，只有執行記錄會有「開車時間查詢失敗」。
 
 ## 🔧 測試
 

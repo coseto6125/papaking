@@ -36,6 +36,12 @@ var BASE_URL = 'https://tdx.transportdata.tw/api/advanced/v1'
 var BASE_URL_BASIC = 'https://tdx.transportdata.tw/api/basic/v1'
 var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply'
 var MAX_EVENTS = 10
+// 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次）
+var DRIVE_TIME_SEGMENTS = 5
+var DRIVE_TIME_CARPARKS = 3
+// 一次 doPost 執行的 directions 總預算：端點不驗來源，一個 POST 塞 10 個位置事件不能變成 80 次呼叫
+var DRIVE_TIME_BUDGET = DRIVE_TIME_SEGMENTS + DRIVE_TIME_CARPARKS
+var driveTimeCallsLeft = DRIVE_TIME_BUDGET
 
 // Google 反查回來的縣市名稱（臺 已正規化為 台）→ TDX City 代碼
 var TDX_CITY = {
@@ -245,47 +251,140 @@ function resolveTDXCity(lat, lon) {
   return null;
 }
 
-// 取得整個縣市的路段 ID → 路名對照表，快取 6h（TDX 基礎會員 5 次/分，不能每次查詢都打）
-function getSegmentNames(city) {
+// CacheService 單筆上限 100KB（位元組）；每塊 30000 個字元最多 90KB，切塊存，索引鍵記塊數
+var CACHE_CHUNK_CHARS = 30000;
+
+function cachePutChunked(cache, key, text, ttlSeconds) {
+  var parts = {};
+  var count = Math.ceil(text.length / CACHE_CHUNK_CHARS);
+  for (var i = 0; i < count; i++) {
+    parts[key + '_' + i] = text.substr(i * CACHE_CHUNK_CHARS, CACHE_CHUNK_CHARS);
+  }
+  parts[key] = String(count);
+  cache.putAll(parts, ttlSeconds);
+}
+
+// 任一塊過期就當整份沒有，回 null 讓呼叫端重抓
+function cacheGetChunked(cache, key) {
+  var count = Number(cache.get(key));
+  if (!count) return null;
+  var keys = [];
+  for (var i = 0; i < count; i++) keys.push(key + '_' + i);
+  var parts = cache.getAll(keys);
+  var text = '';
+  for (var j = 0; j < count; j++) {
+    if (parts[keys[j]] == null) return null;
+    text += parts[keys[j]];
+  }
+  return text;
+}
+
+// 取得整個縣市的路段資料 { ID: [路名, 起迄路口, 收費說明] }，快取 6h（TDX 基礎會員 5 次/分，不能每次查詢都打）
+// 起迄路口與收費目前只有台北市有填，其他縣市為空字串
+function getSegmentInfo(city) {
   if (!city) return {};
   var cache = CacheService.getScriptCache();
-  var cacheKey = 'seg_' + city;
-  var cached = cache.get(cacheKey);
+  var cacheKey = 'seginfo_' + city;
+  var cached = cacheGetChunked(cache, cacheKey);
   if (cached) return JSON.parse(cached);
 
-  var names = {};
+  var info = {};
   try {
     var url = BASE_URL_BASIC + '/Parking/OnStreet/ParkingSegment/City/' + city +
-              '?$select=ParkingSegmentID,ParkingSegmentName&$format=JSON';
+              '?$select=ParkingSegmentID,ParkingSegmentName,RoadSection,FareDescription&$format=JSON';
     var response = tdxFetch(url);
     if (response.getResponseCode() !== 200) {
-      Logger.log('路段名稱狀態: ' + response.getResponseCode());
-      return names;
+      Logger.log('路段資料狀態: ' + response.getResponseCode());
+      return info;
     }
     // basic/v1 回裸陣列，v2 包成 { ParkingSegments: [...] }，兩種都接
     var body = JSON.parse(response.getContentText());
     var segments = Array.isArray(body) ? body : (body.ParkingSegments || []);
     for (var i = 0; i < segments.length; i++) {
-      var zh = (segments[i].ParkingSegmentName || {}).Zh_tw;
-      if (zh) names[segments[i].ParkingSegmentID] = zh;
+      var seg = segments[i];
+      var zh = (seg.ParkingSegmentName || {}).Zh_tw;
+      if (!zh) continue;
+      var road = seg.RoadSection || {};
+      var start = tdxText(road.Start);
+      var end = tdxText(road.End);
+      var section = start && end ? start + '到' + end : '';
+      info[seg.ParkingSegmentID] = [zh, section, tdxText(seg.FareDescription)];
     }
     if (!segments.length) {
-      Logger.log('路段名稱：' + city + ' 回應解不出路段，不寫快取');
-      return names;
+      Logger.log('路段資料：' + city + ' 回應解不出路段，不寫快取');
+      return info;
     }
-    // CacheService 單一值上限 100KB（位元組，中文字 UTF-8 佔 3 bytes），超過 put 會失敗；
-    // 大縣市寧可每次重打也不要靜默失效
-    var payload = JSON.stringify(names);
-    var payloadBytes = Utilities.newBlob(payload).getBytes().length;
-    if (payloadBytes < 100000) {
-      cache.put(cacheKey, payload, 21600);
-    } else {
-      Logger.log('路段名稱：' + city + ' 對照表 ' + payloadBytes + ' 位元組，超過快取上限');
-    }
+    cachePutChunked(cache, cacheKey, JSON.stringify(info), 21600);
   } catch (err) {
-    Logger.log('路段名稱錯誤: ' + err);
+    Logger.log('路段資料錯誤: ' + err);
   }
-  return names;
+  return info;
+}
+
+// TDX 沒填的文字欄位有時是 null、有時是「-」佔位符，一律回空字串
+function tdxText(value) {
+  return value && value !== '-' ? value : '';
+}
+
+function segmentTitle(info, segId) {
+  var seg = info[segId];
+  if (!seg) return '路段 ' + segId;
+  return seg[1] ? seg[0] + '（' + seg[1] + '）' : seg[0];
+}
+
+// ========== 距離與導航 ==========
+
+// Google 開車時間；本次執行預算用完、配額用完或查不到路線回 null，呼叫端退回直線距離
+function driveTime(fromLat, fromLon, toLat, toLon) {
+  if (driveTimeCallsLeft <= 0) return null;
+  driveTimeCallsLeft--;
+  try {
+    var directions = Maps.newDirectionFinder()
+      .setOrigin(fromLat, fromLon)
+      .setDestination(toLat, toLon)
+      .setMode(Maps.DirectionFinder.Mode.DRIVING)
+      .getDirections();
+    var route = directions.routes && directions.routes[0];
+    var leg = route && route.legs && route.legs[0];
+    if (!leg) return null;
+    return { seconds: leg.duration.value, meters: leg.distance.value };
+  } catch (err) {
+    Logger.log('開車時間查詢失敗: ' + err);
+    return null;
+  }
+}
+
+// entries 需有數字 lat/lon（缺座標的先剔除）。先依直線距離排序，前 driveCount 筆再問開車時間並依時間重排，
+// 其餘維持直線距離順序
+function rankByTravel(lat, lon, entries, driveCount) {
+  entries = entries.filter(function (e) { return typeof e.lat === 'number' && typeof e.lon === 'number'; });
+  for (var i = 0; i < entries.length; i++) {
+    entries[i].km = calculateDistance(lat, lon, entries[i].lat, entries[i].lon);
+  }
+  entries.sort(function (a, b) { return a.km - b.km; });
+  var count = Math.min(driveCount, entries.length);
+  for (var j = 0; j < count; j++) {
+    entries[j].drive = driveTime(lat, lon, entries[j].lat, entries[j].lon);
+  }
+  var head = entries.slice(0, count).sort(function (a, b) {
+    var sa = a.drive ? a.drive.seconds : Infinity;
+    var sb = b.drive ? b.drive.seconds : Infinity;
+    return sa - sb || a.km - b.km;
+  });
+  return head.concat(entries.slice(count));
+}
+
+function travelLine(entry) {
+  if (entry.drive) {
+    return '🚗 約 ' + Math.max(1, Math.round(entry.drive.seconds / 60)) + ' 分鐘（' +
+           (entry.drive.meters / 1000).toFixed(1) + 'km）';
+  }
+  return '📍 ' + entry.km.toFixed(2) + 'km';
+}
+
+// 點開直接進 Google Maps 開車導航，起點用手機目前位置
+function navLink(lat, lon) {
+  return '🧭 https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon + '&travelmode=driving';
 }
 
 function queryOnStreet(lat, lon) {
@@ -345,31 +444,29 @@ function queryOnStreet(lat, lon) {
       segments[segId].spots.push(item);
     }
     
-    // 顯示各路段
+    // 依距離／開車時間排序後顯示各路段
+    var entries = Object.keys(segments).map(function (segId) {
+      var seg = segments[segId];
+      var pos = seg.position || {};
+      return { segId: segId, spotCount: seg.spots.length, lat: pos.PositionLat, lon: pos.PositionLon };
+    });
+    var ranked = rankByTravel(lat, lon, entries, DRIVE_TIME_SEGMENTS);
+    var info = getSegmentInfo(resolveTDXCity(lat, lon));
+    var displayCount = Math.min(ranked.length, 10);
     var result = '';
-    var segmentList = Object.keys(segments);
-    var displayCount = Math.min(segmentList.length, 10);
-    var names = getSegmentNames(resolveTDXCity(lat, lon));
     
     for (var i = 0; i < displayCount; i++) {
-      var segId = segmentList[i];
-      var seg = segments[segId];
-      var spotCount = seg.spots.length;
-      var pos = seg.position;
-      
-      result += '【' + (i + 1) + '】' + (names[segId] || '路段 ' + segId) + '\n';
-      result += '🅿️ 共 ' + spotCount + ' 格（小客車）\n';
-      
-      if (pos && pos.PositionLat && pos.PositionLon) {
-        var distance = calculateDistance(lat, lon, pos.PositionLat, pos.PositionLon);
-        result += '📍 ' + distance.toFixed(2) + 'km\n';
-        result += '🗺️ https://www.google.com/maps?q=' + pos.PositionLat + ',' + pos.PositionLon;
-      }
-      result += '\n\n';
+      var entry = ranked[i];
+      var fare = (info[entry.segId] || [])[2];
+      result += '【' + (i + 1) + '】' + segmentTitle(info, entry.segId) + '\n';
+      result += '🅿️ 共 ' + entry.spotCount + ' 格（小客車）\n';
+      if (fare) result += '💰 ' + fare + '\n';
+      result += travelLine(entry) + '\n';
+      result += navLink(entry.lat, entry.lon) + '\n\n';
     }
     
-    if (segmentList.length > 10) {
-      result += '... 還有 ' + (segmentList.length - 10) + ' 個路段\n';
+    if (ranked.length > 10) {
+      result += '... 還有 ' + (ranked.length - 10) + ' 個路段\n';
     }
     
     return result || '目前沒有查詢到路邊停車格';
@@ -410,14 +507,23 @@ function queryParking(lat, lon) {
       return '目前沒有查詢到停車場';
     }
     
+    var entries = items.slice(0, 5).map(function (item) {
+      var pos = item.CarParkPosition || {};
+      return {
+        name: (item.CarParkName && item.CarParkName.Zh_tw) || '未知',
+        address: item.Address || '無地址',
+        lat: pos.PositionLat,
+        lon: pos.PositionLon
+      };
+    });
+    var ranked = rankByTravel(lat, lon, entries, DRIVE_TIME_CARPARKS);
     var result = '';
-    for (var i = 0; i < Math.min(items.length, 5); i++) {
-      var item = items[i];
-      var name = (item.CarParkName && item.CarParkName.Zh_tw) || '未知';
-      var address = item.Address || '無地址';
-      
-      result += '【' + (i + 1) + '】' + name + '\n';
-      result += '📮 ' + address + '\n\n';
+    for (var i = 0; i < ranked.length; i++) {
+      var entry = ranked[i];
+      result += '【' + (i + 1) + '】' + entry.name + '\n';
+      result += '📮 ' + entry.address + '\n';
+      result += travelLine(entry) + '\n';
+      result += navLink(entry.lat, entry.lon) + '\n\n';
     }
     
     return result || '目前沒有查詢到停車場';
