@@ -110,7 +110,8 @@ function handleLocation(event) {
 // 兩個 TDX NearBy 同時發出，之後的路段表、新北資料多半命中快取
 function buildReply(lat, lon) {
   var city = resolveTDXCity(lat, lon);
-  var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + Math.round(SEARCH_RADIUS_KM * 1000) + ')');
+  var radiusM = Math.round(SEARCH_RADIUS_KM * 1000);
+  var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + radiusM + ')');
   var responses = tdxFetchAll([
     BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=10',
     BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=5'
@@ -119,9 +120,9 @@ function buildReply(lat, lon) {
   var parking = queryParking(lat, lon, city, responses[1]);
   
   return '📍 停車資訊查詢結果\n\n' +
-            '🚗 路邊停車格 (1000m內)\n' + onStreet +
+            '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet +
             '\n━━━━━━━━━━━━━━━━\n\n' +
-            '🏢 停車場 (1000m內)\n' + parking;
+            '🏢 停車場 (' + radiusM + 'm內)\n' + parking;
 }
 
 function replyLine(token, text) {
@@ -258,11 +259,18 @@ function fetchAllSafe(requests) {
 function tdxFetchAll(urls) {
   if (!TDX_KEYS.length) throw new Error('TDX_KEYS 未設定或格式錯誤');
   var keyIndexes = urls.map(function () { return pickTDXKey(); });
-  var requests = urls.map(function (url, i) {
+  // 沒有可用金鑰或拿不到 token 的那幾筆不進批次，直接交給 tdxFetch 處理（它會回 429 空 response）
+  var slots = [];
+  var requests = [];
+  urls.forEach(function (url, i) {
     var token = keyIndexes[i] >= 0 ? getTDXToken(keyIndexes[i]) : null;
-    return { url: url, method: 'get', headers: { 'authorization': 'Bearer ' + token }, muteHttpExceptions: true };
+    if (!token) return;
+    slots.push(i);
+    requests.push({ url: url, method: 'get', headers: { 'authorization': 'Bearer ' + token }, muteHttpExceptions: true });
   });
-  var responses = fetchAllSafe(requests);
+  var batch = requests.length ? fetchAllSafe(requests) : [];
+  var responses = [];
+  slots.forEach(function (i, n) { responses[i] = batch[n]; });
   return urls.map(function (url, i) {
     var code = responses[i] ? responses[i].getResponseCode() : 0;
     if (code && code !== 429 && code !== 401 && code !== 403) return responses[i];
@@ -409,14 +417,15 @@ function twd97ToWgs84(x, y) {
   return { lat: lat * 180 / Math.PI, lon: lon * 180 / Math.PI };
 }
 
-// 新北開放資料每頁最多 1000 筆：前三頁併發抓，最後一頁仍滿頁就再逐頁補
+// 新北開放資料每頁最多 1000 筆：前三頁併發抓，最後一頁仍滿頁就再逐頁補。
+// 任一頁失敗回 null，不能讓半份清單被當成完整資料快取 6 小時
 function ntpcFetchAllPages(dataset) {
   var pageUrl = function (page) { return NTPC_API + dataset + '/json?page=' + page + '&size=' + NTPC_PAGE_SIZE; };
   var rows = [];
   var responses = fetchAllSafe([0, 1, 2].map(function (p) { return { url: pageUrl(p), muteHttpExceptions: true }; }));
   var lastCount = 0;
   for (var i = 0; i < responses.length; i++) {
-    if (!responses[i] || responses[i].getResponseCode() !== 200) return rows;
+    if (!responses[i] || responses[i].getResponseCode() !== 200) return null;
     var page = JSON.parse(responses[i].getContentText());
     lastCount = page.length;
     rows = rows.concat(page);
@@ -424,7 +433,7 @@ function ntpcFetchAllPages(dataset) {
   }
   for (var p = 3; lastCount === NTPC_PAGE_SIZE && p < 20; p++) {
     var res = UrlFetchApp.fetch(pageUrl(p), { muteHttpExceptions: true });
-    if (res.getResponseCode() !== 200) break;
+    if (res.getResponseCode() !== 200) return null;
     var more = JSON.parse(res.getContentText());
     lastCount = more.length;
     rows = rows.concat(more);
@@ -440,13 +449,16 @@ function getNtpcCarparks() {
   var list = [];
   try {
     var rows = ntpcFetchAllPages(NTPC_CARPARK_STATIC);
+    if (!rows) return list;
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
       var x = Number(r.TW97X), y = Number(r.TW97Y);
       if (!x || !y) continue;
+      var total = Number(r.TOTALCAR) || 0;
+      if (!total) continue;  // 只有機車或自行車位的場站，對開車的人沒用
       var geo = twd97ToWgs84(x, y);
       var fare = (r.PAYEX || '').split(';')[0];
-      list.push([r.ID, r.NAME, r.ADDRESS || '', Number(geo.lat.toFixed(5)), Number(geo.lon.toFixed(5)), fare, Number(r.TOTALCAR) || 0]);
+      list.push([r.ID, r.NAME, r.ADDRESS || '', Number(geo.lat.toFixed(5)), Number(geo.lon.toFixed(5)), fare, total]);
     }
     if (list.length) cachePutChunked(cache, 'ntpc_carparks', JSON.stringify(list), 21600);
   } catch (err) {
@@ -463,6 +475,7 @@ function getNtpcLive() {
   var live = {};
   try {
     var rows = ntpcFetchAllPages(NTPC_CARPARK_LIVE);
+    if (!rows) return live;
     for (var i = 0; i < rows.length; i++) {
       var n = Number(rows[i].AVAILABLECAR);
       if (rows[i].ID && n >= 0) live[rows[i].ID] = n;
@@ -472,6 +485,16 @@ function getNtpcLive() {
     Logger.log('新北即時車位錯誤: ' + err);
   }
   return live;
+}
+
+// 兩筆座標距離小於 km 視為同一座，保留先出現的
+function dedupeNearby(entries, km) {
+  var kept = [];
+  entries.forEach(function (e) {
+    var dup = kept.some(function (k) { return calculateDistance(e.lat, e.lon, k.lat, k.lon) < km; });
+    if (!dup) kept.push(e);
+  });
+  return kept;
 }
 
 // 新北停車場中距離 radiusKm 內的，整理成與 TDX 停車場相同的 entry 形狀
@@ -648,7 +671,8 @@ function queryParking(lat, lon, city, response) {
       return '❌ 查詢錯誤 (狀態: ' + status + ')';
     }
     if (city === 'NewTaipei') {
-      entries = entries.concat(ntpcCarparksNear(lat, lon, SEARCH_RADIUS_KM));
+      // 台鐵等業者自行上傳 TDX 的場站，市府清單裡多半也有；50m 內視為同一座，保留先到的 TDX 那筆
+      entries = dedupeNearby(entries.concat(ntpcCarparksNear(lat, lon, SEARCH_RADIUS_KM)), 0.05);
     }
     
     if (!entries.length) {
@@ -661,7 +685,7 @@ function queryParking(lat, lon, city, response) {
       var entry = ranked[i];
       result += '【' + (i + 1) + '】' + entry.name + '\n';
       result += '📮 ' + entry.address + '\n';
-      if (entry.total) {
+      if (entry.total !== undefined) {
         result += '🅿️ ' + (entry.available !== undefined ? '剩餘 ' + entry.available + ' / ' : '共 ') + entry.total + ' 格\n';
       }
       if (entry.fare) result += '💰 ' + entry.fare + '\n';
@@ -709,6 +733,7 @@ function testFull() {
   
   // 三重（新北開放資料來源）與台北車站各跑一次
   Logger.log('\n三重:\n' + buildReply(25.069, 121.478));
+  driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，兩次查詢各給滿額才看得到開車時間
   Logger.log('\n台北車站:\n' + buildReply(25.047924, 121.517081));
   
   Logger.log('========== 測試完成 ==========');
