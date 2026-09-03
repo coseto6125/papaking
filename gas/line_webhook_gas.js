@@ -21,7 +21,11 @@ var TDX_RATE_LIMIT = 5
 function parseTDXKeys(raw) {
   try {
     var keys = JSON.parse(raw || '[]')
-    return Array.isArray(keys) ? keys : []
+    if (!Array.isArray(keys)) return []
+    // 缺 id 或 secret 的項目（例如佔位的 null）在這裡就濾掉，後面每個用到 TDX_KEYS[i].id 的地方才不用各自防
+    var valid = keys.filter(function (k) { return k && typeof k.id === 'string' && typeof k.secret === 'string' })
+    if (valid.length !== keys.length) Logger.log('TDX_KEYS 有 ' + (keys.length - valid.length) + ' 筆缺 id 或 secret，已忽略')
+    return valid
   } catch (err) {
     Logger.log('TDX_KEYS 格式錯誤，請檢查指令碼屬性: ' + err)
     return []
@@ -65,8 +69,12 @@ function doPost(e) {
 
     for (var i = 0; i < events.length; i++) {
       var event = events[i];
-      if (event.type === 'message' && event.message.type === 'location') {
+      if (event.type !== 'message' || !event.message || event.message.type !== 'location') continue;
+      // 一個事件失敗（回覆逾時、payload 異常）不能把同批其他使用者的事件一起帶掉
+      try {
         handleLocation(event);
+      } catch (err) {
+        Logger.log('事件 ' + i + ' 處理失敗: ' + err);
       }
     }
 
@@ -122,8 +130,6 @@ function replyLine(token, text) {
 function getTDXToken(keyIndex) {
   // TDX token 有效 24h，每把金鑰各快取 6h，避免每次查詢都打 auth 端點
   var key = TDX_KEYS[keyIndex];
-  if (!key || !key.id || !key.secret) return null;
-
   var cache = CacheService.getScriptCache();
   var cacheKey = 'tdx_token_' + key.id;
   var cached = cache.get(cacheKey);
@@ -134,9 +140,16 @@ function getTDXToken(keyIndex) {
     payload: { grant_type: 'client_credentials', client_id: key.id, client_secret: key.secret },
     muteHttpExceptions: true
   });
-  var data = JSON.parse(response.getContentText());
+  // auth 端點掛掉時回的是 HTML 不是 JSON；這裡回 null 讓 tdxFetch 換下一把，而不是整段查詢中斷
+  var data;
+  try {
+    data = JSON.parse(response.getContentText());
+  } catch (err) {
+    Logger.log('TDX auth 回應非 JSON（狀態 ' + response.getResponseCode() + '）');
+    return null;
+  }
   if (data.access_token) cache.put(cacheKey, data.access_token, 21600);
-  return data.access_token;
+  return data.access_token || null;
 }
 
 // 每把金鑰本分鐘的用量放在 CacheService（key: tdx_rate_<id>_<minute>，60 秒過期）
@@ -180,11 +193,19 @@ function tdxFetch(url) {
       markTDXKeyExhausted(keyIndex);
       continue;
     }
-    var response = UrlFetchApp.fetch(url, {
-      method: 'get',
-      headers: { 'authorization': 'Bearer ' + token },
-      muteHttpExceptions: true
-    });
+    // muteHttpExceptions 只管 HTTP 狀態碼；連線層例外（DNS、配額）仍會丟，一樣換下一把
+    var response;
+    try {
+      response = UrlFetchApp.fetch(url, {
+        method: 'get',
+        headers: { 'authorization': 'Bearer ' + token },
+        muteHttpExceptions: true
+      });
+    } catch (err) {
+      Logger.log('金鑰 ' + keyIndex + ' 連線失敗: ' + err + '，換下一把');
+      markTDXKeyExhausted(keyIndex);
+      continue;
+    }
     // 429 是頻率上限，401/403 是金鑰失效，兩者都該換下一把而不是把錯誤丟回呼叫端
     var code = response.getResponseCode();
     if (code !== 429 && code !== 401 && code !== 403) return response;
@@ -196,7 +217,8 @@ function tdxFetch(url) {
 }
 
 // 用 Google 反查座標所在縣市，回傳 TDX City 代碼；查不到回傳 null
-// 座標取到小數 2 位當快取鍵（約 1km 格），同一格內縣市必定相同，省掉重複的 geocode 配額
+// 座標取到小數 2 位當快取鍵（約 1km 格）省 geocode 配額；縣市交界的格子可能判到鄰縣市，
+// 影響只是那格的路段名對不到而退回顯示路段 ID
 function resolveTDXCity(lat, lon) {
   var cache = CacheService.getScriptCache();
   var cacheKey = 'city_' + lat.toFixed(2) + '_' + lon.toFixed(2);
@@ -251,12 +273,14 @@ function getSegmentNames(city) {
       Logger.log('路段名稱：' + city + ' 回應解不出路段，不寫快取');
       return names;
     }
-    // CacheService 單一值上限 100KB，超過 put 會失敗；大縣市寧可每次重打也不要靜默失效
+    // CacheService 單一值上限 100KB（位元組，中文字 UTF-8 佔 3 bytes），超過 put 會失敗；
+    // 大縣市寧可每次重打也不要靜默失效
     var payload = JSON.stringify(names);
-    if (payload.length < 90000) {
+    var payloadBytes = Utilities.newBlob(payload).getBytes().length;
+    if (payloadBytes < 100000) {
       cache.put(cacheKey, payload, 21600);
     } else {
-      Logger.log('路段名稱：' + city + ' 對照表 ' + payload.length + ' 位元組，超過快取上限');
+      Logger.log('路段名稱：' + city + ' 對照表 ' + payloadBytes + ' 位元組，超過快取上限');
     }
   } catch (err) {
     Logger.log('路段名稱錯誤: ' + err);
@@ -423,10 +447,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 function testConfig() {
   var problems = [];
   if (!LINE_CHANNEL_ACCESS_TOKEN) problems.push('LINE_CHANNEL_ACCESS_TOKEN 未設定');
-  if (!TDX_KEYS.length) problems.push('TDX_KEYS 未設定或格式錯誤');
-  for (var i = 0; i < TDX_KEYS.length; i++) {
-    if (!TDX_KEYS[i].id || !TDX_KEYS[i].secret) problems.push('TDX_KEYS[' + i + '] 缺 id 或 secret');
-  }
+  if (!TDX_KEYS.length) problems.push('TDX_KEYS 未設定、格式錯誤，或沒有一筆同時有 id 和 secret');
   Logger.log(problems.length
     ? '✗ 設定有問題:\n' + problems.join('\n')
     : '✓ 設定完整，TDX 金鑰 ' + TDX_KEYS.length + ' 把');

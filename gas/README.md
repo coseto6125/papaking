@@ -14,7 +14,7 @@
    | `LINE_CHANNEL_ACCESS_TOKEN` | LINE Developers Console 的 Channel access token |
    | `TDX_KEYS` | TDX 金鑰陣列，JSON 格式：`[{"id":"...","secret":"..."}]` |
 
-   `TDX_KEYS` 可放多把。基礎會員每把 5 次/分，程式會在撞到 429 時自動換下一把。
+   `TDX_KEYS` 可放多把。基礎會員每把 5 次/分，程式依本分鐘用量挑用得最少的一把；撞到 429（頻率上限）或 401/403（金鑰失效）會自動換下一把，全部用滿時回覆使用者稍後再試。
 5. 部署為 Web App（執行身分：我，存取權：任何人）
 
    > ⚠️ 這個端點不做請求驗證。Apps Script 的 `doPost(e)` 讀不到 HTTP 標頭，
