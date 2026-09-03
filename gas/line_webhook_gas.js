@@ -142,7 +142,8 @@ function handleLocation(event) {
   replyLine(replyToken, buildReply(lat, lon));
 }
 
-// 兩個 TDX NearBy 同時發出，之後的路段表、新北資料多半命中快取
+// 兩個 TDX NearBy 同時發出，之後的路段表、新北資料多半命中快取。
+// 回傳兩則訊息（路邊停車格、停車場）：一個 reply token 最多可送 5 則，各自 5,000 字上限，拆開就不會互相擠壓
 function buildReply(lat, lon) {
   var city = resolveTDXCity(lat, lon);
   var radiusM = Math.round(SEARCH_RADIUS_KM * 1000);
@@ -159,27 +160,28 @@ function buildReply(lat, lon) {
   var onStreet = queryOnStreet(lat, lon, city, responses[0]);
   var parking = queryParking(lat, lon, city, responses[1], tokenResponse);
   
-  return '📍 停車資訊查詢結果\n\n' +
-            '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet +
-            '\n━━━━━━━━━━━━━━━━\n\n' +
-            '🏢 停車場 (' + radiusM + 'm內)\n' + parking;
+  return [
+    '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet,
+    '🏢 停車場 (' + radiusM + 'm內)\n' + parking
+  ];
 }
 
 var LINE_TEXT_LIMIT = 5000
+var LINE_REPLY_MAX_MESSAGES = 5
 
-function replyLine(token, text) {
-  // LINE 文字訊息上限 5,000 字，超過整則會被拒收；寧可截尾也不要整則消失
-  if (text.length > LINE_TEXT_LIMIT) text = text.slice(0, LINE_TEXT_LIMIT - 1) + '…';
+// texts 可為單一字串或最多 5 則的陣列；每則超過 5,000 字會被 LINE 整包拒收，寧可截尾也不要整則消失
+function replyLine(token, texts) {
+  var messages = [].concat(texts).slice(0, LINE_REPLY_MAX_MESSAGES).map(function (text) {
+    if (text.length > LINE_TEXT_LIMIT) text = text.slice(0, LINE_TEXT_LIMIT - 1) + '…';
+    return { type: 'text', text: text };
+  });
   var options = {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
     },
-    payload: JSON.stringify({
-      replyToken: token,
-      messages: [{ type: 'text', text: text }]
-    }),
+    payload: JSON.stringify({ replyToken: token, messages: messages }),
     muteHttpExceptions: true
   };
   
@@ -1121,11 +1123,11 @@ function testFull() {
   Logger.log('API Base: ' + BASE_URL);
   
   // 三重（新北開放資料）、基隆車站（基隆開放資料）、台北車站（純 TDX）各跑一次
-  Logger.log('\n三重:\n' + buildReply(25.069, 121.478));
+  Logger.log('\n三重:\n' + buildReply(25.069, 121.478).join('\n\n'));
   driveTimeCallsLeft = DRIVE_TIME_BUDGET;
-  Logger.log('\n基隆車站:\n' + buildReply(25.1318, 121.7394));
+  Logger.log('\n基隆車站:\n' + buildReply(25.1318, 121.7394).join('\n\n'));
   driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，後面每次查詢重新給滿額才看得到開車時間
-  Logger.log('\n台北車站:\n' + buildReply(25.047924, 121.517081));
+  Logger.log('\n台北車站:\n' + buildReply(25.047924, 121.517081).join('\n\n'));
   
   Logger.log('========== 測試完成 ==========');
 }
