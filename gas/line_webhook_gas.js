@@ -12,8 +12,9 @@
 
 var PROPS = PropertiesService.getScriptProperties()
 var LINE_CHANNEL_ACCESS_TOKEN = PROPS.getProperty('LINE_CHANNEL_ACCESS_TOKEN')
-// TDX 基礎會員每把金鑰 5 次/分；多把輪替，撞上限自動換下一把
+// TDX 基礎會員每把金鑰 5 次/分；依本分鐘用量挑金鑰，撞上限自動換下一把
 var TDX_KEYS = parseTDXKeys(PROPS.getProperty('TDX_KEYS'))
+var TDX_RATE_LIMIT = 5
 
 // 屬性是人工填的，JSON 打錯不能讓頂層丟例外——那會發生在 doPost 的 try 之前，
 // web app 直接回 500，執行記錄裡看不出跟 LINE 或 TDX 無關
@@ -138,20 +139,48 @@ function getTDXToken(keyIndex) {
   return data.access_token;
 }
 
-// 帶金鑰輪替的 TDX GET：從隨機一把開始，這把不能用就換下一把，全部撞完回傳最後一次的 response
+// 每把金鑰本分鐘的用量放在 CacheService（key: tdx_rate_<id>_<minute>，60 秒過期）
+function tdxRateKey(keyIndex) {
+  return 'tdx_rate_' + TDX_KEYS[keyIndex].id + '_' + Math.floor(Date.now() / 60000);
+}
+
+// 把金鑰標記為本分鐘用滿：429、401/403、拿不到 token 都不該在這一分鐘內再試
+function markTDXKeyExhausted(keyIndex) {
+  CacheService.getScriptCache().put(tdxRateKey(keyIndex), String(TDX_RATE_LIMIT), 60);
+}
+
+// 挑本分鐘用量最少且未滿的金鑰並記一次用量；全部用滿回傳 -1
+function pickTDXKey() {
+  var cache = CacheService.getScriptCache();
+  var rateKeys = TDX_KEYS.map(function (_, i) { return tdxRateKey(i); });
+  var counts = cache.getAll(rateKeys);
+  var best = -1;
+  var bestCount = TDX_RATE_LIMIT;
+  for (var i = 0; i < rateKeys.length; i++) {
+    var count = Number(counts[rateKeys[i]] || 0);
+    if (count < bestCount) {
+      best = i;
+      bestCount = count;
+    }
+  }
+  if (best >= 0) cache.put(rateKeys[best], String(bestCount + 1), 60);
+  return best;
+}
+
+// 帶金鑰輪替的 TDX GET：用量計數挑金鑰，這把不能用就標記用滿換下一把；全部用滿回傳 429 的空 response
 function tdxFetch(url) {
   if (!TDX_KEYS.length) throw new Error('TDX_KEYS 未設定或格式錯誤');
 
-  var response = null;
-  var startIndex = Math.floor(Math.random() * TDX_KEYS.length);
   for (var n = 0; n < TDX_KEYS.length; n++) {
-    var keyIndex = (startIndex + n) % TDX_KEYS.length;
+    var keyIndex = pickTDXKey();
+    if (keyIndex < 0) break;
     var token = getTDXToken(keyIndex);
     if (!token) {
       Logger.log('金鑰 ' + keyIndex + ' 取不到 token，換下一把');
+      markTDXKeyExhausted(keyIndex);
       continue;
     }
-    response = UrlFetchApp.fetch(url, {
+    var response = UrlFetchApp.fetch(url, {
       method: 'get',
       headers: { 'authorization': 'Bearer ' + token },
       muteHttpExceptions: true
@@ -160,8 +189,10 @@ function tdxFetch(url) {
     var code = response.getResponseCode();
     if (code !== 429 && code !== 401 && code !== 403) return response;
     Logger.log('金鑰 ' + keyIndex + ' 回應 ' + code + '，換下一把');
+    markTDXKeyExhausted(keyIndex);
   }
-  return response;
+  Logger.log('所有 TDX 金鑰本分鐘已用滿');
+  return { getResponseCode: function () { return 429; }, getContentText: function () { return ''; } };
 }
 
 // 用 Google 反查座標所在縣市，回傳 TDX City 代碼；查不到回傳 null
@@ -248,6 +279,9 @@ function queryOnStreet(lat, lon) {
     
     if (status === 404) {
       return '目前沒有查詢到路邊停車格';
+    }
+    if (status === 429) {
+      return '⏳ 查詢人數太多，請一分鐘後再試';
     }
     
     if (status !== 200) {
@@ -337,6 +371,9 @@ function queryParking(lat, lon) {
     
     if (status === 404) {
       return '目前沒有查詢到停車場';
+    }
+    if (status === 429) {
+      return '⏳ 查詢人數太多，請一分鐘後再試';
     }
     
     if (status !== 200) {
