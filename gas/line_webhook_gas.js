@@ -187,8 +187,8 @@ function buildReply(lat, lon) {
     { entries: parkingParsed.entries || [], driveCount: DRIVE_TIME_CARPARKS }
   ]);
   lap('開車時間（一批）');
-  var onStreet = onStreetParsed.error ? section(onStreetParsed.error) : renderOnStreet(ranked[0], getSegmentInfo(city));
-  var parking = parkingParsed.error ? section(parkingParsed.error) : renderParking(ranked[1]);
+  var onStreet = onStreetParsed.error ? section(onStreetParsed.error) : renderSafely(function () { return renderOnStreet(ranked[0], getSegmentInfo(city)); });
+  var parking = parkingParsed.error ? section(parkingParsed.error) : renderSafely(function () { return renderParking(ranked[1]); });
   lap('排版');
 
   var messages = [
@@ -200,9 +200,19 @@ function buildReply(lat, lon) {
   return messages;
 }
 
-// 兩個查詢函式共用的回傳形狀：text 是整段文字，cards 是排序後供 Flex 用的精簡資料
+// 兩個區塊共用的回傳形狀：text 是整段文字，cards 是排序後供 Flex 用的精簡資料
 function section(text, cards) {
   return { text: text, cards: cards || [] };
+}
+
+// 排版丟例外只影響該區塊，另一段照常送出
+function renderSafely(render) {
+  try {
+    return render();
+  } catch (err) {
+    Logger.log('排版錯誤: ' + err);
+    return section('❌ 查詢失敗');
+  }
 }
 
 // 一張卡：{ kind, title, lines, lat, lon }。Flex 的 text 元件不能是空字串，lines 進來前就過濾掉
@@ -1065,32 +1075,32 @@ function rankSections(lat, lon, sections) {
     return { entries: entries, count: count };
   });
 
-  var cached = pending.length ? cache.getAll(pending.map(function (p) { return p.key; })) : {};
-  var misses = pending.filter(function (p) {
-    if (!cached[p.key]) return true;
-    p.entry.drive = JSON.parse(cached[p.key]);
-    return false;
-  });
-  // 沒快取的一起用 RPC 併發算，共用同一份每次執行的預算；RPC 整批失敗就把預算還回去讓逐筆版接手
-  misses = misses.slice(0, Math.max(0, driveTimeCallsLeft));
-  driveTimeCallsLeft -= misses.length;
-  var batch = driveTimesBatch(lat, lon, misses.map(function (m) { return m.entry; }));
-  if (batch === null) driveTimeCallsLeft += misses.length;
-  misses.forEach(function (m, n) {
-    var drive = batch ? batch[n] : null;
-    if (drive && drive.meters === null) drive.meters = Math.round(m.entry.km * 1000);  // 距離解析不到就用直線
-    m.entry.drive = drive || (batch === null ? driveTime(lat, lon, m.entry.lat, m.entry.lon) : null);
-    if (m.entry.drive) cache.put(m.key, JSON.stringify(m.entry.drive), DRIVE_TIME_CACHE_SECONDS);
-  });
+  // 快取與 RPC 這段任何一步丟例外（CacheService 配額、壞掉的快取值），退化成只有直線距離，不能讓整則回覆消失
+  try {
+    var cached = pending.length ? cache.getAll(pending.map(function (p) { return p.key; })) : {};
+    var misses = pending.filter(function (p) {
+      if (!cached[p.key]) return true;
+      p.entry.drive = JSON.parse(cached[p.key]);
+      return false;
+    });
+    // 沒快取的一起用 RPC 併發算，共用同一份每次執行的預算；RPC 整批失敗就把預算還回去讓逐筆版接手
+    misses = misses.slice(0, Math.max(0, driveTimeCallsLeft));
+    driveTimeCallsLeft -= misses.length;
+    var batch = driveTimesBatch(lat, lon, misses.map(function (m) { return m.entry; }));
+    if (batch === null) driveTimeCallsLeft += misses.length;
+    misses.forEach(function (m, n) {
+      var drive = batch ? batch[n] : null;
+      if (drive && drive.meters === null) drive.meters = Math.round(m.entry.km * 1000);  // 距離解析不到就用直線
+      m.entry.drive = drive || (batch === null ? driveTime(lat, lon, m.entry.lat, m.entry.lon) : null);
+      if (m.entry.drive) cache.put(m.key, JSON.stringify(m.entry.drive), DRIVE_TIME_CACHE_SECONDS);
+    });
+  } catch (err) {
+    Logger.log('開車時間排序錯誤，改用直線距離: ' + err);
+  }
 
   return prepared.map(function (p) {
     return p.entries.slice(0, p.count).sort(byDriveThenKm).concat(p.entries.slice(p.count));
   });
-}
-
-// 單一區塊的便利寫法
-function rankByTravel(lat, lon, entries, driveCount) {
-  return rankSections(lat, lon, [{ entries: entries, driveCount: driveCount }])[0];
 }
 
 function travelLine(entry) {
