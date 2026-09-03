@@ -1246,9 +1246,35 @@ function warmCaches() {
 
 // ========== 測試函數 ==========
 
+// 測試用座標：在市區種子點附近隨機偏移 1 到 2 公里，避免每次都撞到縣市、路段、開車時間的快取而量不到真實耗時
+var TEST_SEEDS = {
+  '三重': [25.069, 121.478],
+  '基隆車站': [25.1318, 121.7394],
+  '台北車站': [25.047924, 121.517081]
+};
+
+function randomTestPoint(seedName) {
+  var seed = TEST_SEEDS[seedName];
+  var angle = Math.random() * 2 * Math.PI;
+  var km = 1 + Math.random();
+  var lat = seed[0] + (km / 111) * Math.sin(angle);
+  var lon = seed[1] + (km / (111 * Math.cos(seed[0] * Math.PI / 180))) * Math.cos(angle);
+  return { name: seedName, lat: Number(lat.toFixed(5)), lon: Number(lon.toFixed(5)) };
+}
+
+// 跑一個種子點並把回覆與耗時寫進執行記錄
+function runTestPoint(seedName) {
+  driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，每個測試點重新給滿額才看得到開車時間
+  var point = randomTestPoint(seedName);
+  var started = Date.now();
+  var messages = buildReply(point.lat, point.lon);
+  Logger.log('\n' + point.name + '（' + point.lat + ', ' + point.lon + '）共 ' + (Date.now() - started) + 'ms:\n' + describeReply(messages));
+  return messages;
+}
+
 // 把三重的實際回覆送到 LINE 的驗證端點（只檢查格式、不會發訊息），LINE 會指出 Flex 哪個欄位不合規
 function testFlexValidate() {
-  var messages = buildReply(25.069, 121.478).map(function (item) {
+  var messages = runTestPoint('三重').map(function (item) {
     return typeof item === 'string' ? { type: 'text', text: item } : item;
   });
   var response = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/validate/reply', {
@@ -1309,11 +1335,9 @@ function testFull() {
   Logger.log('API Base: ' + BASE_URL);
   
   // 三重（新北開放資料）、基隆車站（基隆開放資料）、台北車站（純 TDX）各跑一次
-  Logger.log('\n三重:\n' + describeReply(buildReply(25.069, 121.478)));
-  driveTimeCallsLeft = DRIVE_TIME_BUDGET;
-  Logger.log('\n基隆車站:\n' + describeReply(buildReply(25.1318, 121.7394)));
-  driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，後面每次查詢重新給滿額才看得到開車時間
-  Logger.log('\n台北車站:\n' + describeReply(buildReply(25.047924, 121.517081)));
+  runTestPoint('三重');
+  runTestPoint('基隆車站');
+  runTestPoint('台北車站');
   
   Logger.log('========== 測試完成 ==========');
 }
