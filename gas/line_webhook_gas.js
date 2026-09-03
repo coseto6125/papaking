@@ -960,7 +960,7 @@ function googleDirectionsUrl(fromLat, fromLon, toLat, toLon, token) {
     .replace('{FROM}', b64url(fromLat + ',' + fromLon))
     .replace('{TO}', b64url(toLat + ',' + toLon))
     .replace('{LNG}', fromLon).replace('{LAT}', fromLat)
-    .replace('{TOKEN}', token);
+    .split('{TOKEN}').join(token);  // token 是爬來的不透明字串，不能進 replace 的替換樣式（$& 之類）
   return GOOGLE_DIRECTIONS_URL + '?authuser=0&hl=zh-TW&gl=tw&pb=' + pb;
 }
 
@@ -998,8 +998,10 @@ function driveTimesBatch(fromLat, fromLon, targets) {
     var results = responses.map(function (r) {
       return r && r.getResponseCode() === 200 ? parseGoogleDrive(r.getContentText()) : null;
     });
+    var anyHttpFailure = responses.some(function (r) { return !r || r.getResponseCode() !== 200; });
     if (results.every(function (r) { return r === null; })) {
-      CacheService.getScriptCache().remove('google_kei');  // 全部空手多半是 token 失效
+      // 整批 HTTP 失敗才像 token 過期；整批 200 卻解析不出開車模式是路線問題（離島、座標落在水面），token 留著
+      if (anyHttpFailure) CacheService.getScriptCache().remove('google_kei');
       return null;
     }
     return results;
