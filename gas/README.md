@@ -32,6 +32,17 @@
 - `calculateDistance()` - 計算距離
 - `rankByTravel()` / `driveTime()` - 直線最近的前 5 個路段、前 3 個停車場再問 Google 開車時間並依時間重排
 - `navLink()` - 產生 Google Maps 開車導航連結（不吃配額）
+- `buildReply()` - 兩個 TDX NearBy 用 `UrlFetchApp.fetchAll` 併發，再組回覆
+- `ntpcCarparksNear()` - 新北市路外停車場改走新北開放資料（含每 3 分鐘更新的剩餘車位），座標由 TWD97 換算
+
+## 🗂️ 資料來源
+
+| 資料              | 來源                                                     | 備註                                     |
+|-------------------|----------------------------------------------------------|------------------------------------------|
+| 路邊停車格、路段  | TDX `Parking/OnStreet`                                   | 全國                                     |
+| 路外停車場        | TDX `Parking/OffStreet/CarPark/NearBy`                   | 新北市、基隆市在 TDX 上沒有市府資料      |
+| 新北路外停車場    | 新北開放資料 `b1464ef0-…`（靜態）、`e09b35a5-…`（剩餘）  | 只含領有登記證的場站，私營臨停場不在內   |
+| 開車時間、縣市    | Apps Script 內建 `Maps` 服務                             | 見下方配額                               |
 
 ## ⚠️ Google Maps 配額
 
