@@ -1,6 +1,6 @@
 [project]
 name = "papaking"
-version = "0.1.0"
+version = "0.1.1"
 description = "LINE Bot for parking information query in Taiwan using TDX API"
 readme = "README.md"
 license = {text = "CC-BY-NC-4.0"}
