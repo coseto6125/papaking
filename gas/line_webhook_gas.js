@@ -41,6 +41,12 @@ var NTPC_API = 'https://data.ntpc.gov.tw/api/datasets/'
 var NTPC_CARPARK_STATIC = 'b1464ef0-9c7c-4a6f-abf7-6bdf32847e68'
 var NTPC_CARPARK_LIVE = 'e09b35a5-a738-48cc-b0f5-570b67ad9c78'
 var NTPC_PAGE_SIZE = 1000
+// 基隆市政府同樣沒上傳 TDX。靜態 CSV 只有 22 座公有場站、沒有座標（地址用 Google geocode 一次，永久存在
+// ScriptProperties）；即時剩餘只有 HTML 表格，用名稱比對接上
+var KLCG_STATIC_CSV = 'https://www.klcg.gov.tw/wSite/public/Attachment/01602/f1728958369371.csv'
+var KLCG_LIVE_PAGE = 'https://e-traffic.klcg.gov.tw/KeelungTraffic/pages/park.jsp'
+// 基隆即時頁有些場站的時間戳停在幾個月前，超過一天視為失聯；新北的即時 API 沒有時間戳，整份每 3 分鐘更新
+var KLCG_LIVE_STALE_MS = 24 * 60 * 60 * 1000
 var SEARCH_RADIUS_KM = 1.0
 var MAX_EVENTS = 10
 // 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次）
@@ -511,6 +517,145 @@ function ntpcCarparksNear(lat, lon, radiusKm) {
   return entries;
 }
 
+// ========== 基隆開放資料 ==========
+
+// 地址 → 經緯度。查到的永久存在 ScriptProperties（geocode 配額每日 1,000，一個地址只該花一次）；
+// 查無結果只在 CacheService 記 6h 後重試（地址寫法或 Google 的解析會變）；暫時性錯誤回 false，不記錄
+function geocodeCached(address) {
+  var props = PropertiesService.getScriptProperties();
+  var key = 'geo_' + address;
+  var cached = props.getProperty(key);
+  if (cached) return { lat: Number(cached.split(',')[0]), lon: Number(cached.split(',')[1]) };
+  var cache = CacheService.getScriptCache();
+  if (cache.get(key)) return null;
+  try {
+    var geo = Maps.newGeocoder().setLanguage('zh-TW').setRegion('tw').geocode(address);
+    var loc = geo.results && geo.results[0] && geo.results[0].geometry && geo.results[0].geometry.location;
+    if (!loc) {
+      Logger.log('地址反查無結果（' + geo.status + '），6 小時後重試: ' + address);
+      cache.put(key, 'none', 21600);
+      return null;
+    }
+    props.setProperty(key, loc.lat + ',' + loc.lng);
+    return { lat: loc.lat, lon: loc.lng };
+  } catch (err) {
+    Logger.log('地址反查失敗 ' + address + ': ' + err);
+    return false;
+  }
+}
+
+// 兩邊名稱寫法差很多（「基隆市信二立體停車場」vs「力揚基隆信二立體」），去掉這些修飾詞後用包含關係比對
+function klcgNormalizeName(name) {
+  return name.replace(/基隆市|基隆|力揚|停車場|立體|平面|地下室|地下|臨時|[()（）\s]/g, '');
+}
+
+// 基隆公有路外停車場 → [[名稱, 地址, lat, lon, 小型車格數], ...]，快取 6h
+function getKlcgCarparks() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('klcg_carparks');
+  if (cached) return JSON.parse(cached);
+  var list = [];
+  try {
+    var response = UrlFetchApp.fetch(KLCG_STATIC_CSV, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return list;
+    var rows = Utilities.parseCsv(response.getContentText('Big5'));
+    var complete = true;
+    for (var i = 1; i < rows.length; i++) {
+      var total = Number((/小型車(\d+)位/.exec(rows[i][1] || '') || [])[1]) || 0;
+      if (!total) continue;
+      var address = (rows[i][2] || '').trim();
+      var point = geocodeCached(/基隆/.test(address) ? address : '基隆市' + address);
+      if (point === false) complete = false;  // 暫時性錯誤：這次先少一座，但不把缺漏的清單快取 6h
+      if (!point) continue;
+      list.push([rows[i][0].trim(), address, Number(point.lat.toFixed(5)), Number(point.lon.toFixed(5)), total]);
+    }
+    if (list.length && complete) cache.put('klcg_carparks', JSON.stringify(list), 21600);
+  } catch (err) {
+    Logger.log('基隆停車場清單錯誤: ' + err);
+  }
+  return list;
+}
+
+// 基隆即時剩餘 { 正規化名稱: 剩餘數 }，快取 180s；更新時間超過一天的視為失聯不採用
+function getKlcgLive() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('klcg_live');
+  if (cached) return JSON.parse(cached);
+  var live = {};
+  try {
+    var response = UrlFetchApp.fetch(KLCG_LIVE_PAGE, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return live;
+    var html = response.getContentText();
+    var row = /<td>([^<]+)<\/td>\s*<td>(\d+)<\/td>\s*<td>([^<]+)<\/td>/g;
+    var m;
+    while ((m = row.exec(html)) !== null) {
+      var updated = new Date(m[3].trim().replace(' ', 'T') + ':00+08:00').getTime();
+      if (isNaN(updated) || Date.now() - updated > KLCG_LIVE_STALE_MS) continue;
+      live[klcgNormalizeName(m[1])] = Number(m[2]);
+    }
+    if (Object.keys(live).length) cache.put('klcg_live', JSON.stringify(live), 180);
+  } catch (err) {
+    Logger.log('基隆即時車位錯誤: ' + err);
+  }
+  return live;
+}
+
+// 即時名稱是否指向這座靜態場站：直接包含，或是併記名稱的一段（「光明停二」對「光明停一停二」：
+// 共用前綴「光明停」至少 2 個字，剩下的「二」出現在前綴之後）
+function klcgKeyMatches(target, key) {
+  if (target.indexOf(key) >= 0) return true;
+  var p = 0;
+  while (p < target.length && p < key.length && target[p] === key[p]) p++;
+  return p >= 2 && key.length > p && target.indexOf(key.slice(p), p) >= 0;
+}
+
+// 把每筆即時名稱指派給唯一一座靜態場站，回傳 { 靜態名稱: 剩餘數 }。
+// 多座都對得上時（「源遠」對「源遠」和「源遠249巷第二」）給正規化名稱長度最接近的那座；
+// 一座對到多筆時是併記的場站（「光明停一停二」對「光明停一」「光明停二」），相加。
+// 第二輪才處理「即時名稱包含靜態名稱」的情況，且只補給還沒有數字的場站
+function klcgAssignLive(live, names) {
+  var targets = names.map(klcgNormalizeName);
+  var assigned = {};
+  var leftovers = [];
+  Object.keys(live).forEach(function (key) {
+    if (!key) return;
+    var best = -1;
+    var bestDiff = Infinity;
+    targets.forEach(function (target, i) {
+      var diff = Math.abs(target.length - key.length);
+      if (klcgKeyMatches(target, key) && diff < bestDiff) { best = i; bestDiff = diff; }
+    });
+    if (best >= 0) assigned[names[best]] = (assigned[names[best]] || 0) + live[key];
+    else leftovers.push(key);
+  });
+  leftovers.sort(function (a, b) { return a.length - b.length; }).forEach(function (key) {
+    targets.forEach(function (target, i) {
+      if (assigned[names[i]] === undefined && target && key.indexOf(target) >= 0) assigned[names[i]] = live[key];
+    });
+  });
+  return assigned;
+}
+
+function klcgCarparksNear(lat, lon, radiusKm) {
+  var list = getKlcgCarparks();
+  var near = list.filter(function (c) { return calculateDistance(lat, lon, c[2], c[3]) <= radiusKm; });
+  if (!near.length) return [];
+  // 指派要看全部 22 座，不能只看範圍內的，否則範圍外的正主不在場時即時數會被鄰近同名場站認走
+  var available = klcgAssignLive(getKlcgLive(), list.map(function (c) { return c[0]; }));
+  return near.map(function (c) {
+    return { name: c[0], address: c[1], lat: c[2], lon: c[3], total: c[4], available: available[c[0]] };
+  });
+}
+
+// 市府沒上傳 TDX 的縣市，補上該市自己的開放資料
+function extraCarparksNear(city, lat, lon, radiusKm) {
+  switch (city) {
+    case 'NewTaipei': return ntpcCarparksNear(lat, lon, radiusKm);
+    case 'Keelung': return klcgCarparksNear(lat, lon, radiusKm);
+    default: return [];
+  }
+}
+
 // ========== 距離與導航 ==========
 
 // Google 開車時間；本次執行預算用完、配額用完或查不到路線回 null，呼叫端退回直線距離
@@ -670,10 +815,8 @@ function queryParking(lat, lon, city, response) {
     } else if (status !== 404 && status !== 429) {
       return '❌ 查詢錯誤 (狀態: ' + status + ')';
     }
-    if (city === 'NewTaipei') {
-      // 台鐵等業者自行上傳 TDX 的場站，市府清單裡多半也有；50m 內視為同一座，保留先到的 TDX 那筆
-      entries = dedupeNearby(entries.concat(ntpcCarparksNear(lat, lon, SEARCH_RADIUS_KM)), 0.05);
-    }
+    // 台鐵等業者自行上傳 TDX 的場站，市府清單裡多半也有；50m 內視為同一座，保留先到的 TDX 那筆
+    entries = dedupeNearby(entries.concat(extraCarparksNear(city, lat, lon, SEARCH_RADIUS_KM)), 0.05);
     
     if (!entries.length) {
       return status === 429 ? '⏳ 查詢人數太多，請一分鐘後再試' : '目前沒有查詢到停車場';
@@ -698,6 +841,16 @@ function queryParking(lat, lon, city, response) {
     Logger.log('停車場錯誤: ' + err);
     return '❌ 查詢失敗';
   }
+}
+
+// ========== 排程 ==========
+
+// 掛在時間觸發器上（建議每 4 小時），讓路段表、新北與基隆清單、22 次地址反查都不落在使用者的查詢上
+function warmCaches() {
+  getSegmentInfo('Taipei');
+  getSegmentInfo('NewTaipei');
+  getNtpcCarparks();
+  Logger.log('基隆場站 ' + getKlcgCarparks().length + ' 座已預熱');
 }
 
 // ========== 測試函數 ==========
@@ -731,9 +884,11 @@ function testFull() {
   // 直接使用全域變數
   Logger.log('API Base: ' + BASE_URL);
   
-  // 三重（新北開放資料來源）與台北車站各跑一次
+  // 三重（新北開放資料）、基隆車站（基隆開放資料）、台北車站（純 TDX）各跑一次
   Logger.log('\n三重:\n' + buildReply(25.069, 121.478));
-  driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，兩次查詢各給滿額才看得到開車時間
+  driveTimeCallsLeft = DRIVE_TIME_BUDGET;
+  Logger.log('\n基隆車站:\n' + buildReply(25.1318, 121.7394));
+  driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，後面每次查詢重新給滿額才看得到開車時間
   Logger.log('\n台北車站:\n' + buildReply(25.047924, 121.517081));
   
   Logger.log('========== 測試完成 ==========');
