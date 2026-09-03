@@ -54,7 +54,7 @@ var DRIVE_TIME_SEGMENTS = 3
 var DRIVE_TIME_CARPARKS = 2
 // 同一起點格（約 100m）到同一終點的開車時間快取 30 分鐘：原地重查、同區的人接連查都不再問 Google
 var DRIVE_TIME_CACHE_SECONDS = 1800
-// 一次 doPost 執行的 directions 總預算：端點不驗來源，一個 POST 塞 10 個位置事件不能變成 80 次呼叫
+// 一次 doPost 執行的 directions 總預算：端點不驗來源，一個 POST 塞滿 MAX_EVENTS 個位置事件也只能花這麼多，不會乘上事件數
 var DRIVE_TIME_BUDGET = DRIVE_TIME_SEGMENTS + DRIVE_TIME_CARPARKS
 var driveTimeCallsLeft = DRIVE_TIME_BUDGET
 
@@ -447,7 +447,6 @@ function ntpcFetchAllPages(dataset) {
 
 // responses 是前三頁的回應（可能含 null）；不足一頁就停，仍滿頁就逐頁補
 function ntpcRowsFromPages(dataset, responses) {
-  var pageUrl = function (page) { return ntpcPageUrl(dataset, page); };
   var rows = [];
   var lastCount = 0;
   for (var i = 0; i < responses.length; i++) {
@@ -458,7 +457,7 @@ function ntpcRowsFromPages(dataset, responses) {
     if (lastCount < NTPC_PAGE_SIZE) return rows;
   }
   for (var p = 3; lastCount === NTPC_PAGE_SIZE && p < 20; p++) {
-    var res = UrlFetchApp.fetch(pageUrl(p), { muteHttpExceptions: true });
+    var res = UrlFetchApp.fetch(ntpcPageUrl(dataset, p), { muteHttpExceptions: true });
     if (res.getResponseCode() !== 200) return null;
     var more = JSON.parse(res.getContentText());
     lastCount = more.length;
@@ -495,8 +494,10 @@ function getNtpcCarparks() {
 
 // 新北即時剩餘汽車位 { ID: 剩餘數 }，來源每 3 分鐘更新，快取 180s
 function getNtpcLive() {
-  var cached = cacheGetChunked(CacheService.getScriptCache(), 'ntpc_live');
+  var cache = CacheService.getScriptCache();
+  var cached = cacheGetChunked(cache, 'ntpc_live');
   if (cached) return JSON.parse(cached);
+  if (cache.get('ntpc_live_failed')) return {};  // 剛剛併批那輪已經失敗過，一分鐘內不再重打
   try {
     return cacheNtpcLive(ntpcFetchAllPages(NTPC_CARPARK_LIVE));
   } catch (err) {
@@ -505,10 +506,13 @@ function getNtpcLive() {
   }
 }
 
-// rows 為 null（抓取失敗）時回空表且不寫快取
+// rows 為 null（抓取失敗）時回空表、不寫快取，只留 60 秒的失敗標記讓同一次執行不重試
 function cacheNtpcLive(rows) {
   var live = {};
-  if (!rows) return live;
+  if (!rows) {
+    CacheService.getScriptCache().put('ntpc_live_failed', '1', 60);
+    return live;
+  }
   for (var i = 0; i < rows.length; i++) {
     var n = Number(rows[i].AVAILABLECAR);
     if (rows[i].ID && n >= 0) live[rows[i].ID] = n;
@@ -602,8 +606,10 @@ function getKlcgCarparks() {
 
 // 基隆即時剩餘 { 正規化名稱: 剩餘數 }，快取 180s；更新時間超過一天的視為失聯不採用
 function getKlcgLive() {
-  var cached = CacheService.getScriptCache().get('klcg_live');
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('klcg_live');
   if (cached) return JSON.parse(cached);
+  if (cache.get('klcg_live_failed')) return {};
   try {
     var response = UrlFetchApp.fetch(KLCG_LIVE_PAGE, { muteHttpExceptions: true });
     return cacheKlcgLive(response.getResponseCode() === 200 ? response.getContentText() : null);
@@ -613,10 +619,13 @@ function getKlcgLive() {
   }
 }
 
-// html 為 null（抓取失敗）時回空表且不寫快取
+// html 為 null（抓取失敗）時回空表、不寫快取，只留 60 秒的失敗標記讓同一次執行不重試
 function cacheKlcgLive(html) {
   var live = {};
-  if (!html) return live;
+  if (!html) {
+    CacheService.getScriptCache().put('klcg_live_failed', '1', 60);
+    return live;
+  }
   var row = /<td>([^<]+)<\/td>\s*<td>(\d+)<\/td>\s*<td>([^<]+)<\/td>/g;
   var m;
   while ((m = row.exec(html)) !== null) {
@@ -742,7 +751,7 @@ function rankByTravel(lat, lon, entries, driveCount) {
   var keys = entries.slice(0, count).map(function (e) {
     return 'drive_' + lat.toFixed(3) + '_' + lon.toFixed(3) + '_' + e.lat.toFixed(5) + '_' + e.lon.toFixed(5);
   });
-  var cached = cache.getAll(keys);
+  var cached = keys.length ? cache.getAll(keys) : {};
   for (var j = 0; j < count; j++) {
     if (cached[keys[j]]) {
       entries[j].drive = JSON.parse(cached[keys[j]]);
