@@ -48,6 +48,33 @@ var KLCG_LIVE_PAGE = 'https://e-traffic.klcg.gov.tw/KeelungTraffic/pages/park.js
 // 基隆即時頁有些場站的時間戳停在幾個月前，超過一天視為失聯；新北的即時 API 沒有時間戳，整份每 3 分鐘更新
 var KLCG_LIVE_STALE_MS = 24 * 60 * 60 * 1000
 var SEARCH_RADIUS_KM = 1.0
+// Google 地圖搜尋 RPC（沒有金鑰、非公開介面）補 TDX 與市府資料都沒有的私營場站。
+// 只有名稱、地址、座標、營業時間，沒有格數、剩餘、費率；欄位位置一改就會靜默失效。
+// 先關著，用 testGooglePlaces() 確認 Apps Script 的出口打得通再開
+var GOOGLE_PLACES_ENABLED = false
+var GOOGLE_MAPS_URL = 'https://www.google.com/maps'
+var GOOGLE_SEARCH_URL = 'https://www.google.com/search'
+var GOOGLE_PLACES_QUERY = '停車場'
+var GOOGLE_TOKEN_CACHE_SECONDS = 300
+// 從真實請求錄下來的 pb；{Q}=查詢字 urlsafe base64、{LAT}/{LNG}=視角中心、{TOKEN}=頁面 kEI（出現兩次）。
+// !1d 是視角高度（公尺級），3000 實測最貼近 1km 半徑：三重測點 1km 內抓到 19 座，原錄製值 7228 只有 10 座且偏向熱門大場站。
+// 其他旗標是固定的結果形狀開關，少一段 Google 就不回地點清單，所以整段照抄不精簡
+var GOOGLE_SEARCH_PB = '!1z{Q}!4m8!1m3!1d3000!2d{LNG}!3d{LAT}!3m2!1i1024!2i768!4f13.1!7i20!10b1!12m52!1m5!18b1!30b1' +
+  '!31m1!1b1!34e1!2m4!5m1!6e2!20e3!39b1!6m24!32i1!49b1!63m0!66b1!85b1!114b1!149b1!206b1!209b1!212b1!216b1' +
+  '!222b1!223b1!232b1!234b1!235b1!244b1!246b1!250b1!253b1!260b1!266b1!273b1!291m0!10b1!12b1!13b1!14b1!16b1' +
+  '!17m1!3e1!20m4!5e2!6b1!8b1!14b1!46m1!1b0!96b1!99b1!19m4!2m3!1i360!2i120!4i8!20m57!2m2!1i203!2i100!3m2!2i4' +
+  '!5b1!6m6!1m2!1i86!2i86!1m2!1i408!2i240!7m33!1m3!1e1!2b0!3e3!1m3!1e2!2b1!3e2!1m3!1e2!2b0!3e3!1m3!1e8!2b0' +
+  '!3e3!1m3!1e10!2b0!3e3!1m3!1e10!2b1!3e2!1m3!1e10!2b0!3e4!1m3!1e9!2b1!3e2!2b1!9b0!15m8!1m7!1m2!1m1!1e2!2m2' +
+  '!1i195!2i195!3i20!22m5!1s{TOKEN}!7e81!14m1!3s{TOKEN}!15i9937!24m107!1m25!13m9!2b1!3b1!4b1!6i1!8b1!9b1' +
+  '!14b1!20b1!25b1!18m14!3b1!4b1!5b1!6b1!13b1!14b1!17b1!21b1!22b1!32b1!33m1!1b1!34b1!36e2!10m1!8e3!11m1!3e1' +
+  '!17b1!20m2!1e3!1e6!24b1!25b1!26b1!27b1!29b1!30m1!2b1!36b1!37b1!39m3!2m2!2i1!3i1!43b1!52b1!54m1!1b1!55b1' +
+  '!56m1!1b1!61m2!1m1!1e1!65m5!3m4!1m3!1m2!1i224!2i298!72m22!1m8!2b1!5b1!7b1!12m4!1b1!2b1!4m1!1e1!4b1!8m10' +
+  '!1m6!4m1!1e1!4m1!1e3!4m1!1e4!3sother_user_google_review_posts__and__hotel_and_vr_partner_review_posts!6m1' +
+  '!1e1!9b1!89b1!90m2!1m1!1e2!98m3!1b1!2b1!3b1!103b1!113b1!114m3!1b1!2m1!1b1!117b1!122m1!1b1!126b1!127b1' +
+  '!128m1!1b1!26m4!2m3!1i80!2i92!4i8!30m28!1m6!1m2!1i0!2i0!2m2!1i530!2i768!1m6!1m2!1i974!2i0!2m2!1i1024!2i768' +
+  '!1m6!1m2!1i0!2i0!2m2!1i1024!2i20!1m6!1m2!1i0!2i748!2m2!1i1024!2i768!34m19!2b1!3b1!4b1!6b1!8m6!1b1!3b1!4b1' +
+  '!5b1!6b1!7b1!9b1!12b1!14b1!20b1!23b1!25b1!26b1!31b1!37m1!1e81!42b1!49m10!3b1!6m2!1b1!2b1!7m2!1e3!2b1!8b1' +
+  '!9b1!10e2!50m3!2e2!3m1!3b1!61b1!67m5!7b1!10b1!14b1!15m1!1b0!69i781!77b1'
 var MAX_EVENTS = 10
 // 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次）
 var DRIVE_TIME_SEGMENTS = 3
@@ -122,13 +149,15 @@ function buildReply(lat, lon) {
   var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + radiusM + ')');
   // 新北／基隆的即時剩餘快取失效時，把那幾筆請求併進同一批，不要等 TDX 回來才開始抓
   var liveRequests = liveCacheRequests(city);
+  var needToken = GOOGLE_PLACES_ENABLED && !CacheService.getScriptCache().get('google_kei');
   var responses = tdxFetchAll([
     BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=10',
     BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=5'
-  ], liveRequests);
-  primeLiveCache(city, responses.slice(2));
+  ], liveRequests.concat(needToken ? [googleTokenRequest()] : []));
+  primeLiveCache(city, responses.slice(2, 2 + liveRequests.length));
+  var tokenResponse = needToken ? responses[2 + liveRequests.length] : null;
   var onStreet = queryOnStreet(lat, lon, city, responses[0]);
-  var parking = queryParking(lat, lon, city, responses[1]);
+  var parking = queryParking(lat, lon, city, responses[1], tokenResponse);
   
   return '📍 停車資訊查詢結果\n\n' +
             '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet +
@@ -136,8 +165,11 @@ function buildReply(lat, lon) {
             '🏢 停車場 (' + radiusM + 'm內)\n' + parking;
 }
 
+var LINE_TEXT_LIMIT = 5000
+
 function replyLine(token, text) {
-  // 直接使用全域變數
+  // LINE 文字訊息上限 5,000 字，超過整則會被拒收；寧可截尾也不要整則消失
+  if (text.length > LINE_TEXT_LIMIT) text = text.slice(0, LINE_TEXT_LIMIT - 1) + '…';
   var options = {
     method: 'post',
     headers: {
@@ -521,12 +553,11 @@ function cacheNtpcLive(rows) {
   return live;
 }
 
-// 兩筆座標距離小於 km 視為同一座，保留先出現的
-function dedupeNearby(entries, km) {
+// 依序保留清單中第一個出現的，之後與已保留任一筆 isSame 的丟掉（官方來源排前面，就是官方優先）
+function dedupeInto(list, isSame) {
   var kept = [];
-  entries.forEach(function (e) {
-    var dup = kept.some(function (k) { return calculateDistance(e.lat, e.lon, k.lat, k.lon) < km; });
-    if (!dup) kept.push(e);
+  list.forEach(function (item) {
+    if (!kept.some(function (k) { return isSame(k, item); })) kept.push(item);
   });
   return kept;
 }
@@ -572,9 +603,10 @@ function geocodeCached(address) {
   }
 }
 
-// 兩邊名稱寫法差很多（「基隆市信二立體停車場」vs「力揚基隆信二立體」），去掉這些修飾詞後用包含關係比對
+// 兩邊名稱寫法差很多（「基隆市信二立體停車場」vs「力揚基隆信二立體」）：走共用的 carparkNameKey，
+// 再多去掉不帶「市」的「基隆」
 function klcgNormalizeName(name) {
-  return name.replace(/基隆市|基隆|力揚|停車場|立體|平面|地下室|地下|臨時|[()（）\s]/g, '');
+  return carparkNameKey(name.replace(/基隆市|基隆/g, ''));
 }
 
 // 基隆公有路外停車場 → [[名稱, 地址, lat, lon, 小型車格數], ...]，快取 6h
@@ -714,6 +746,123 @@ function extraCarparksNear(city, lat, lon, radiusKm) {
     case 'Keelung': return klcgCarparksNear(lat, lon, radiusKm);
     default: return [];
   }
+}
+
+// ========== Google 地圖搜尋（無金鑰） ==========
+
+// 從 /maps 頁面 HTML 撈出 kEI session token；沒有 token 搜尋 RPC 會回空清單
+function googleTokenFromHtml(html) {
+  var i = html.indexOf('kEI=');
+  if (i < 0) return null;
+  var quote = html.charAt(i + 4);
+  var end = html.indexOf(quote, i + 5);
+  return end > i + 5 ? html.slice(i + 5, end) : null;
+}
+
+function googleTokenRequest() {
+  return { url: GOOGLE_MAPS_URL, headers: { 'accept-language': 'zh-TW' }, muteHttpExceptions: true };
+}
+
+// token 快取 5 分鐘；沒快取時自己抓一次
+function getGoogleToken(prefetched) {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('google_kei');
+  if (cached) return cached;
+  var response = prefetched || UrlFetchApp.fetch(GOOGLE_MAPS_URL, googleTokenRequest());
+  if (!response || response.getResponseCode() !== 200) return null;
+  var token = googleTokenFromHtml(response.getContentText());
+  if (token) cache.put('google_kei', token, GOOGLE_TOKEN_CACHE_SECONDS);
+  return token;
+}
+
+function googleSearchUrl(query, lat, lon, token) {
+  var q = Utilities.base64EncodeWebSafe(query, Utilities.Charset.UTF_8).replace(/=+$/, '');
+  var pb = GOOGLE_SEARCH_PB.replace('{Q}', q).replace('{LNG}', lon).replace('{LAT}', lat).split('{TOKEN}').join(token);
+  return GOOGLE_SEARCH_URL + '?tbm=map&authuser=0&hl=zh-TW&gl=tw&q=' + encodeURIComponent(query) + '&pb=' + pb;
+}
+
+// Google 商家名稱是任何人都能改的文字：去掉換行與控制字元、限制長度，才不會在回覆裡偽裝成官方那幾行
+function cleanGoogleText(value, maxLength) {
+  if (typeof value !== 'string') return '';
+  return value.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ').trim().slice(0, maxLength);
+}
+
+// 今天的營業時間字串；結構是 d[203][0][0] = [星期, ?, ?, [[時段字串]]]，對不上就 undefined（顯示端整行省略）
+function googleHoursOf(d) {
+  var today = d[203] && d[203][0] && d[203][0][0];
+  var text = cleanGoogleText(today && today[3] && today[3][0] && today[3][0][0], 40);
+  return text || undefined;
+}
+
+// 解析搜尋 RPC：JSONP 前綴 )]}' 之後是 JSON，地點在 data[64]，每筆 entry[1] 的 [11]=名稱、[9]=[?,?,lat,lng]、[18]=地址
+function parseGooglePlaces(body) {
+  var text = body.indexOf(")]}'") === 0 ? body.slice(body.indexOf('\n') + 1) : body;
+  var data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    return [];
+  }
+  if (!Array.isArray(data) || !Array.isArray(data[64])) return [];
+  var places = [];
+  data[64].forEach(function (entry) {
+    var d = entry && entry[1];
+    if (!Array.isArray(d) || typeof d[11] !== 'string' || !Array.isArray(d[9]) || d[9].length < 4) return;
+    if (typeof d[9][2] !== 'number' || typeof d[9][3] !== 'number') return;
+    var name = cleanGoogleText(d[11], 40);
+    if (!name) return;
+    places.push({ name: name, address: cleanGoogleText(d[18], 60), lat: d[9][2], lon: d[9][3], hours: googleHoursOf(d), source: 'google' });
+  });
+  return places;
+}
+
+// 座標附近 radiusKm 內 Google 找得到的停車場；任何一步失敗回空陣列，主流程不受影響
+function googleCarparksNear(lat, lon, radiusKm, prefetchedTokenResponse) {
+  if (!GOOGLE_PLACES_ENABLED) return [];
+  try {
+    var token = getGoogleToken(prefetchedTokenResponse);
+    if (!token) {
+      Logger.log('Google 地圖 token 取不到');
+      return [];
+    }
+    var response = UrlFetchApp.fetch(googleSearchUrl(GOOGLE_PLACES_QUERY, lat, lon, token), { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) {
+      Logger.log('Google 地圖搜尋狀態 ' + response.getResponseCode());
+      return [];
+    }
+    var places = parseGooglePlaces(response.getContentText());
+    if (!places.length) {
+      CacheService.getScriptCache().remove('google_kei');  // 空清單多半是 token 失效，下次重抓
+      Logger.log('Google 地圖搜尋回空清單');
+    }
+    // 搜「停車場」偶爾混進充電站、活動中心之類的地點，名稱沒有「停車」或 Parking 的不要
+    return places.filter(function (p) {
+      return /停車|parking/i.test(p.name) && calculateDistance(lat, lon, p.lat, p.lon) <= radiusKm;
+    });
+  } catch (err) {
+    Logger.log('Google 地圖搜尋錯誤: ' + err);
+    return [];
+  }
+}
+
+// 去重用的名稱正規化：先去業者前綴，再去行政區、「地下／立體／停車場」這類修飾詞和標點
+// （順序重要：「力揚信義區公所」要先拿掉「力揚」，行政區的規則才對得到「信義區」）
+function carparkNameKey(name) {
+  return (name || '')
+    .replace(/歐特儀|Times|力揚|嘟嘟房|台灣聯通|俥亭|城市車旅|CITY PARKING|uTagGo|中興保全|停管處|正好停/gi, '')
+    .replace(/^(臺|台)?(北|中|南|東|新北|桃園|新竹|苗栗|彰化|南投|雲林|嘉義|屏東|宜蘭|花蓮|基隆|高雄|澎湖|金門|連江)(市|縣)/, '')
+    .replace(/^[^區]{1,3}區/, '')
+    .replace(/地下室|地下|立體|平面|臨時|公有|公共|路外|附設|收費|汽車|小型車|停車場|停車塔|停車格|出入口|入口|B\d+/g, '')
+    .replace(/[()（）\-－\s、,.．]/g, '');
+}
+
+// 兩筆是否為同一座：50m 內不看名字；300m 內且正規化名稱互相包含也算（市府座標常落在地籍中心、Google 釘在入口）
+function sameCarpark(a, b) {
+  var km = calculateDistance(a.lat, a.lon, b.lat, b.lon);
+  if (km < 0.05) return true;
+  if (km > 0.3) return false;
+  var ka = carparkNameKey(a.name), kb = carparkNameKey(b.name);
+  return ka.length >= 2 && kb.length >= 2 && (ka.indexOf(kb) >= 0 || kb.indexOf(ka) >= 0);
 }
 
 // ========== 距離與導航 ==========
@@ -864,7 +1013,7 @@ function queryOnStreet(lat, lon, city, response) {
   }
 }
 
-function queryParking(lat, lon, city, response) {
+function queryParking(lat, lon, city, response, googleTokenResponse) {
   try {
     var status = response.getResponseCode();
     Logger.log('停車場狀態: ' + status);
@@ -885,8 +1034,11 @@ function queryParking(lat, lon, city, response) {
     } else if (status !== 404 && status !== 429) {
       return '❌ 查詢錯誤 (狀態: ' + status + ')';
     }
-    // 台鐵等業者自行上傳 TDX 的場站，市府清單裡多半也有；50m 內視為同一座，保留先到的 TDX 那筆
-    entries = dedupeNearby(entries.concat(extraCarparksNear(city, lat, lon, SEARCH_RADIUS_KM)), 0.05);
+    // 同一座常同時出現在 TDX（業者自行上傳）、市府清單和 Google；順序 TDX → 市府 → Google，先到的官方那筆優先
+    entries = dedupeInto(
+      entries.concat(extraCarparksNear(city, lat, lon, SEARCH_RADIUS_KM), googleCarparksNear(lat, lon, SEARCH_RADIUS_KM, googleTokenResponse)),
+      sameCarpark
+    );
     
     if (!entries.length) {
       return status === 429 ? '⏳ 查詢人數太多，請一分鐘後再試' : '目前沒有查詢到停車場';
@@ -902,8 +1054,11 @@ function queryParking(lat, lon, city, response) {
         result += '🅿️ ' + (entry.available !== undefined ? '剩餘 ' + entry.available + ' / ' : '共 ') + entry.total + ' 格\n';
       }
       if (entry.fare) result += '💰 ' + entry.fare + '\n';
+      if (entry.hours) result += '🕒 ' + entry.hours + '\n';
       result += travelLine(entry) + '\n';
-      result += navLink(entry.lat, entry.lon) + '\n\n';
+      result += navLink(entry.lat, entry.lon) + '\n';
+      if (entry.source === 'google') result += 'ℹ️ 來源 Google，無官方車格與剩餘資料\n';
+      result += '\n';
     }
     return result;
     
@@ -924,6 +1079,17 @@ function warmCaches() {
 }
 
 // ========== 測試函數 ==========
+
+// 在編輯器執行：確認 Apps Script 的出口打得到 Google 搜尋 RPC，印出三重大有街附近找到的停車場
+function testGooglePlaces() {
+  var enabled = GOOGLE_PLACES_ENABLED;
+  GOOGLE_PLACES_ENABLED = true;
+  var places = googleCarparksNear(25.0665, 121.4750, SEARCH_RADIUS_KM);
+  GOOGLE_PLACES_ENABLED = enabled;
+  Logger.log('Google 找到 ' + places.length + ' 座:\n' + places.map(function (p) {
+    return p.name + ' | ' + p.address + ' | ' + p.lat + ',' + p.lon + ' | ' + (p.hours || '無營業時間');
+  }).join('\n'));
+}
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
   var R = 6371;
