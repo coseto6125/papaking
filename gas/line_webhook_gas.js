@@ -41,6 +41,11 @@ var NTPC_API = 'https://data.ntpc.gov.tw/api/datasets/'
 var NTPC_CARPARK_STATIC = 'b1464ef0-9c7c-4a6f-abf7-6bdf32847e68'
 var NTPC_CARPARK_LIVE = 'e09b35a5-a738-48cc-b0f5-570b67ad9c78'
 var NTPC_PAGE_SIZE = 1000
+// 基隆市政府同樣沒上傳 TDX。靜態 CSV 只有 22 座公有場站、沒有座標（地址用 Google geocode 一次，永久存在
+// ScriptProperties）；即時剩餘只有 HTML 表格，用名稱比對接上
+var KLCG_STATIC_CSV = 'https://www.klcg.gov.tw/wSite/public/Attachment/01602/f1728958369371.csv'
+var KLCG_LIVE_PAGE = 'https://e-traffic.klcg.gov.tw/KeelungTraffic/pages/park.jsp'
+var LIVE_STALE_MS = 24 * 60 * 60 * 1000
 var SEARCH_RADIUS_KM = 1.0
 var MAX_EVENTS = 10
 // 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次）
@@ -511,6 +516,119 @@ function ntpcCarparksNear(lat, lon, radiusKm) {
   return entries;
 }
 
+// ========== 基隆開放資料 ==========
+
+// 地址 → 經緯度，結果永久存在 ScriptProperties（geocode 配額每日 1,000，一個地址只該花一次）
+function geocodeCached(address) {
+  var props = PropertiesService.getScriptProperties();
+  var key = 'geo_' + address;
+  var cached = props.getProperty(key);
+  if (cached) return cached === 'none' ? null : { lat: Number(cached.split(',')[0]), lon: Number(cached.split(',')[1]) };
+  var point = null;
+  try {
+    var geo = Maps.newGeocoder().setLanguage('zh-TW').setRegion('tw').geocode(address);
+    var loc = geo.results && geo.results[0] && geo.results[0].geometry && geo.results[0].geometry.location;
+    if (loc) point = { lat: loc.lat, lon: loc.lng };
+  } catch (err) {
+    Logger.log('地址反查失敗 ' + address + ': ' + err);
+    return null;  // 配額或暫時性錯誤不要存成 none
+  }
+  props.setProperty(key, point ? point.lat + ',' + point.lon : 'none');
+  return point;
+}
+
+// 兩邊名稱寫法差很多（「基隆市信二立體停車場」vs「力揚基隆信二立體」），去掉這些修飾詞後用包含關係比對
+function klcgNormalizeName(name) {
+  return name.replace(/基隆市|基隆|力揚|停車場|立體|平面|地下室|地下|臨時|[()（）\s]/g, '');
+}
+
+// 基隆公有路外停車場 → [[名稱, 地址, lat, lon, 小型車格數], ...]，快取 6h
+function getKlcgCarparks() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('klcg_carparks');
+  if (cached) return JSON.parse(cached);
+  var list = [];
+  try {
+    var response = UrlFetchApp.fetch(KLCG_STATIC_CSV, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return list;
+    var rows = Utilities.parseCsv(response.getContentText('Big5'));
+    for (var i = 1; i < rows.length; i++) {
+      var total = Number((/小型車(\d+)位/.exec(rows[i][1] || '') || [])[1]) || 0;
+      if (!total) continue;
+      var address = (rows[i][2] || '').trim();
+      var point = geocodeCached(/基隆/.test(address) ? address : '基隆市' + address);
+      if (!point) continue;
+      list.push([rows[i][0].trim(), address, Number(point.lat.toFixed(5)), Number(point.lon.toFixed(5)), total]);
+    }
+    if (list.length) cache.put('klcg_carparks', JSON.stringify(list), 21600);
+  } catch (err) {
+    Logger.log('基隆停車場清單錯誤: ' + err);
+  }
+  return list;
+}
+
+// 基隆即時剩餘 { 正規化名稱: 剩餘數 }，快取 180s；更新時間超過一天的視為失聯不採用
+function getKlcgLive() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('klcg_live');
+  if (cached) return JSON.parse(cached);
+  var live = {};
+  try {
+    var response = UrlFetchApp.fetch(KLCG_LIVE_PAGE, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) return live;
+    var html = response.getContentText();
+    var row = /<td>([^<]+)<\/td>\s*<td>(\d+)<\/td>\s*<td>([^<]+)<\/td>/g;
+    var m;
+    while ((m = row.exec(html)) !== null) {
+      var updated = new Date(m[3].trim().replace(' ', 'T') + ':00+08:00').getTime();
+      if (isNaN(updated) || Date.now() - updated > LIVE_STALE_MS) continue;
+      live[klcgNormalizeName(m[1])] = Number(m[2]);
+    }
+    if (Object.keys(live).length) cache.put('klcg_live', JSON.stringify(live), 180);
+  } catch (err) {
+    Logger.log('基隆即時車位錯誤: ' + err);
+  }
+  return live;
+}
+
+// 從即時表找對得上的：靜態名稱包含多筆即時名稱時是併記的場站（「光明停一停二」對「光明停一」「光明停二」），相加；
+// 反過來即時名稱包含靜態名稱時取最短、最貼近的一筆
+function klcgLiveFor(live, name) {
+  var target = klcgNormalizeName(name);
+  var parts = [];
+  var containers = [];
+  Object.keys(live).forEach(function (key) {
+    if (!key) return;
+    if (target.indexOf(key) >= 0) parts.push(key);
+    else if (key.indexOf(target) >= 0) containers.push(key);
+  });
+  if (parts.length) return parts.reduce(function (sum, key) { return sum + live[key]; }, 0);
+  if (containers.length) return live[containers.sort(function (a, b) { return a.length - b.length; })[0]];
+  return undefined;
+}
+
+function klcgCarparksNear(lat, lon, radiusKm) {
+  var live = null;
+  var entries = [];
+  var list = getKlcgCarparks();
+  for (var i = 0; i < list.length; i++) {
+    var c = list[i];
+    if (calculateDistance(lat, lon, c[2], c[3]) > radiusKm) continue;
+    if (live === null) live = getKlcgLive();
+    entries.push({ name: c[0], address: c[1], lat: c[2], lon: c[3], total: c[4], available: klcgLiveFor(live, c[0]) });
+  }
+  return entries;
+}
+
+// 市府沒上傳 TDX 的縣市，補上該市自己的開放資料
+function extraCarparksNear(city, lat, lon, radiusKm) {
+  switch (city) {
+    case 'NewTaipei': return ntpcCarparksNear(lat, lon, radiusKm);
+    case 'Keelung': return klcgCarparksNear(lat, lon, radiusKm);
+    default: return [];
+  }
+}
+
 // ========== 距離與導航 ==========
 
 // Google 開車時間；本次執行預算用完、配額用完或查不到路線回 null，呼叫端退回直線距離
@@ -670,10 +788,8 @@ function queryParking(lat, lon, city, response) {
     } else if (status !== 404 && status !== 429) {
       return '❌ 查詢錯誤 (狀態: ' + status + ')';
     }
-    if (city === 'NewTaipei') {
-      // 台鐵等業者自行上傳 TDX 的場站，市府清單裡多半也有；50m 內視為同一座，保留先到的 TDX 那筆
-      entries = dedupeNearby(entries.concat(ntpcCarparksNear(lat, lon, SEARCH_RADIUS_KM)), 0.05);
-    }
+    // 台鐵等業者自行上傳 TDX 的場站，市府清單裡多半也有；50m 內視為同一座，保留先到的 TDX 那筆
+    entries = dedupeNearby(entries.concat(extraCarparksNear(city, lat, lon, SEARCH_RADIUS_KM)), 0.05);
     
     if (!entries.length) {
       return status === 429 ? '⏳ 查詢人數太多，請一分鐘後再試' : '目前沒有查詢到停車場';
@@ -733,6 +849,8 @@ function testFull() {
   
   // 三重（新北開放資料來源）與台北車站各跑一次
   Logger.log('\n三重:\n' + buildReply(25.069, 121.478));
+  driveTimeCallsLeft = DRIVE_TIME_BUDGET;
+  Logger.log('\n基隆車站:\n' + buildReply(25.1318, 121.7394));
   driveTimeCallsLeft = DRIVE_TIME_BUDGET;  // 預算是每次執行一份，兩次查詢各給滿額才看得到開車時間
   Logger.log('\n台北車站:\n' + buildReply(25.047924, 121.517081));
   
