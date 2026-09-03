@@ -36,9 +36,12 @@ var BASE_URL = 'https://tdx.transportdata.tw/api/advanced/v1'
 var BASE_URL_BASIC = 'https://tdx.transportdata.tw/api/basic/v1'
 var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply'
 var MAX_EVENTS = 10
-// 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次，一次查詢最多 8 次）
+// 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次）
 var DRIVE_TIME_SEGMENTS = 5
 var DRIVE_TIME_CARPARKS = 3
+// 一次 doPost 執行的 directions 總預算：端點不驗來源，一個 POST 塞 10 個位置事件不能變成 80 次呼叫
+var DRIVE_TIME_BUDGET = DRIVE_TIME_SEGMENTS + DRIVE_TIME_CARPARKS
+var driveTimeCallsLeft = DRIVE_TIME_BUDGET
 
 // Google 反查回來的縣市名稱（臺 已正規化為 台）→ TDX City 代碼
 var TDX_CITY = {
@@ -301,11 +304,11 @@ function getSegmentInfo(city) {
       var seg = segments[i];
       var zh = (seg.ParkingSegmentName || {}).Zh_tw;
       if (!zh) continue;
-      // 起迄路口有些縣市填「-」當佔位符，視同沒填
       var road = seg.RoadSection || {};
-      var hasSection = road.Start && road.End && road.Start !== '-' && road.End !== '-';
-      var section = hasSection ? road.Start + '到' + road.End : '';
-      info[seg.ParkingSegmentID] = [zh, section, seg.FareDescription || ''];
+      var start = tdxText(road.Start);
+      var end = tdxText(road.End);
+      var section = start && end ? start + '到' + end : '';
+      info[seg.ParkingSegmentID] = [zh, section, tdxText(seg.FareDescription)];
     }
     if (!segments.length) {
       Logger.log('路段資料：' + city + ' 回應解不出路段，不寫快取');
@@ -318,6 +321,11 @@ function getSegmentInfo(city) {
   return info;
 }
 
+// TDX 沒填的文字欄位有時是 null、有時是「-」佔位符，一律回空字串
+function tdxText(value) {
+  return value && value !== '-' ? value : '';
+}
+
 function segmentTitle(info, segId) {
   var seg = info[segId];
   if (!seg) return '路段 ' + segId;
@@ -326,8 +334,10 @@ function segmentTitle(info, segId) {
 
 // ========== 距離與導航 ==========
 
-// Google 開車時間；配額用完或查不到路線回 null，呼叫端退回直線距離
+// Google 開車時間；本次執行預算用完、配額用完或查不到路線回 null，呼叫端退回直線距離
 function driveTime(fromLat, fromLon, toLat, toLon) {
+  if (driveTimeCallsLeft <= 0) return null;
+  driveTimeCallsLeft--;
   try {
     var directions = Maps.newDirectionFinder()
       .setOrigin(fromLat, fromLon)
@@ -344,8 +354,10 @@ function driveTime(fromLat, fromLon, toLat, toLon) {
   }
 }
 
-// entries 需有 lat/lon。先依直線距離排序，前 driveCount 筆再問開車時間並依時間重排，其餘維持直線距離順序
+// entries 需有數字 lat/lon（缺座標的先剔除）。先依直線距離排序，前 driveCount 筆再問開車時間並依時間重排，
+// 其餘維持直線距離順序
 function rankByTravel(lat, lon, entries, driveCount) {
+  entries = entries.filter(function (e) { return typeof e.lat === 'number' && typeof e.lon === 'number'; });
   for (var i = 0; i < entries.length; i++) {
     entries[i].km = calculateDistance(lat, lon, entries[i].lat, entries[i].lon);
   }
@@ -435,7 +447,8 @@ function queryOnStreet(lat, lon) {
     // 依距離／開車時間排序後顯示各路段
     var entries = Object.keys(segments).map(function (segId) {
       var seg = segments[segId];
-      return { segId: segId, spotCount: seg.spots.length, lat: seg.position.PositionLat, lon: seg.position.PositionLon };
+      var pos = seg.position || {};
+      return { segId: segId, spotCount: seg.spots.length, lat: pos.PositionLat, lon: pos.PositionLon };
     });
     var ranked = rankByTravel(lat, lon, entries, DRIVE_TIME_SEGMENTS);
     var info = getSegmentInfo(resolveTDXCity(lat, lon));
