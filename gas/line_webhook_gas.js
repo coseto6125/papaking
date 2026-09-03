@@ -146,7 +146,10 @@ function handleLocation(event) {
 // 回傳最多三則訊息（路邊停車格文字、停車場文字、有結果時再加一則 Flex carousel）：
 // 一個 reply token 最多可送 5 則，文字各自 5,000 字上限，拆開就不會互相擠壓
 function buildReply(lat, lon) {
+  var t0 = Date.now();
+  var lap = function (label) { Logger.log('⏱ ' + label + ' ' + (Date.now() - t0) + 'ms'); };
   var city = resolveTDXCity(lat, lon);
+  lap('反查縣市');
   var radiusM = Math.round(SEARCH_RADIUS_KM * 1000);
   var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + radiusM + ')');
   // 新北／基隆的即時剩餘快取失效時，把那幾筆請求併進同一批，不要等 TDX 回來才開始抓
@@ -156,10 +159,13 @@ function buildReply(lat, lon) {
     BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=10',
     BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=5'
   ], liveRequests.concat(needToken ? [googleTokenRequest()] : []));
+  lap('TDX 併發 ' + (2 + liveRequests.length + (needToken ? 1 : 0)) + ' 筆');
   primeLiveCache(city, responses.slice(2, 2 + liveRequests.length));
   var tokenResponse = needToken ? responses[2 + liveRequests.length] : null;
   var onStreet = queryOnStreet(lat, lon, city, responses[0]);
+  lap('路邊停車格（含開車時間）');
   var parking = queryParking(lat, lon, city, responses[1], tokenResponse);
+  lap('停車場（含開車時間）');
 
   var messages = [
     '🚗 路邊停車格 (' + radiusM + 'm內)\n' + onStreet.text,
@@ -1152,6 +1158,21 @@ function warmCaches() {
 }
 
 // ========== 測試函數 ==========
+
+// 把三重的實際回覆送到 LINE 的驗證端點（只檢查格式、不會發訊息），LINE 會指出 Flex 哪個欄位不合規
+function testFlexValidate() {
+  var messages = buildReply(25.069, 121.478).map(function (item) {
+    return typeof item === 'string' ? { type: 'text', text: item } : item;
+  });
+  var response = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/validate/reply', {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN },
+    payload: JSON.stringify({ messages: messages }),
+    muteHttpExceptions: true
+  });
+  Logger.log('validate/reply → ' + response.getResponseCode() + ' ' + response.getContentText());
+  Logger.log(JSON.stringify(messages[2] || null).slice(0, 3000));
+}
 
 // 文字訊息原樣、Flex 只印卡片數，方便在執行記錄裡看
 function describeReply(messages) {
