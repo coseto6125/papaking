@@ -27,10 +27,10 @@
 
 - `doPost()` - 接收 LINE Webhook 事件
 - `handleLocation()` - 處理位置訊息
-- `queryOnStreet()` - 查詢路邊停車格
-- `queryParking()` - 查詢停車場
+- `parseOnStreet()` / `renderOnStreet()` - 路邊停車格：解析 TDX 回應、排版文字與 Flex 卡片
+- `parseParking()` / `renderParking()` - 停車場：合併 TDX、市府、Google 三個來源後去重、排版
 - `calculateDistance()` - 計算距離
-- `rankByTravel()` / `driveTime()` - 直線最近的前 3 個路段、前 2 個停車場再問 Google 開車時間並依時間重排（同起點格到同終點快取 30 分鐘）
+- `rankSections()` / `driveTimesBatch()` - 兩段各自依直線排序，最近的 3 個路段加 2 個停車場的開車時間一批併發問 Google 地圖 RPC 後重排（同起點格到同終點快取 30 分鐘；RPC 失敗退回內建 DirectionFinder）
 - `navLink()` - 產生 Google Maps 開車導航連結（不吃配額）
 - `buildReply()` - 兩個 TDX NearBy 用 `UrlFetchApp.fetchAll` 併發，再組回覆
 - `ntpcCarparksNear()` - 新北市路外停車場改走新北開放資料（含每 3 分鐘更新的剩餘車位），座標由 TWD97 換算
