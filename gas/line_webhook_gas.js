@@ -81,6 +81,21 @@ var DRIVE_TIME_SEGMENTS = 3
 var DRIVE_TIME_CARPARKS = 2
 // 同一起點格（約 100m）到同一終點的開車時間快取 30 分鐘：原地重查、同區的人接連查都不再問 Google
 var DRIVE_TIME_CACHE_SECONDS = 1800
+// 開車時間改走 Google 地圖網頁版的 directions RPC（無金鑰）：所有目的地一次 fetchAll，5 筆約 0.5s；
+// 內建的 Maps.newDirectionFinder 只能逐筆同步呼叫，5 筆要 2s 以上。RPC 拿不到結果的那筆退回內建版
+var DRIVE_TIME_RPC_ENABLED = true
+var GOOGLE_DIRECTIONS_URL = 'https://www.google.com/maps/preview/directions'
+// 從真實請求錄下來的 pb；{FROM}/{TO}=起終點「lat,lon」的 urlsafe base64、{LAT}/{LNG}=視角中心（用起點）、
+// {TOKEN}=頁面 kEI。!3e0 是開車模式；結尾的 !20m28… 螢幕區塊拿掉 Google 就不回完整結果
+var GOOGLE_DIRECTIONS_PB = '!1m2!1z{FROM}!6e0!1m2!1z{TO}!6e0' +
+  '!3m12!1m3!1d28912.10988108799!2d{LNG}!3d{LAT}' +
+  '!2m3!1f0.0!2f0.0!3f0.0!3m2!1i1024!2i768!4f13.1' +
+  '!6m54!1m5!18b1!30b1!31m1!1b1!34e1!2m4!5m1!6e2!20e3!39b1' +
+  '!6m24!32i1!49b1!63m0!66b1!85b1!114b1!149b1!206b1!209b1!212b1!216b1!222b1!223b1!232b1!234b1!235b1!244b1' +
+  '!246b1!250b1!253b1!260b1!266b1!273b1!291m0!10b1!12b1!13b1!14b1!16b1' +
+  '!17m1!3e0!20m6!1e3!2e3!5e2!6b1!8b1!14b1!46m1!1b0!96b1!99b1!15m3!1s{TOKEN}!7e81!15i10142' +
+  '!20m28!1m6!1m2!1i0!2i0!2m2!1i530!2i768!1m6!1m2!1i974!2i0!2m2!1i1024!2i768' +
+  '!1m6!1m2!1i0!2i0!2m2!1i1024!2i20!1m6!1m2!1i0!2i748!2m2!1i1024!2i768!27b1!40i781!47m2!8b1!10e2'
 // 一次 doPost 執行的 directions 總預算：端點不驗來源，一個 POST 塞滿 MAX_EVENTS 個位置事件也只能花這麼多，不會乘上事件數
 var DRIVE_TIME_BUDGET = DRIVE_TIME_SEGMENTS + DRIVE_TIME_CARPARKS
 var driveTimeCallsLeft = DRIVE_TIME_BUDGET
@@ -154,7 +169,7 @@ function buildReply(lat, lon) {
   var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + radiusM + ')');
   // 新北／基隆的即時剩餘快取失效時，把那幾筆請求併進同一批，不要等 TDX 回來才開始抓
   var liveRequests = liveCacheRequests(city);
-  var needToken = GOOGLE_PLACES_ENABLED && !CacheService.getScriptCache().get('google_kei');
+  var needToken = (GOOGLE_PLACES_ENABLED || DRIVE_TIME_RPC_ENABLED) && !CacheService.getScriptCache().get('google_kei');
   var responses = tdxFetchAll([
     BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=10',
     BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=5'
@@ -162,6 +177,7 @@ function buildReply(lat, lon) {
   lap('TDX 併發 ' + (2 + liveRequests.length + (needToken ? 1 : 0)) + ' 筆');
   primeLiveCache(city, responses.slice(2, 2 + liveRequests.length));
   var tokenResponse = needToken ? responses[2 + liveRequests.length] : null;
+  if (tokenResponse) getGoogleToken(tokenResponse);  // 寫進快取，後面的開車時間批次和 Places 直接取用
   var onStreet = queryOnStreet(lat, lon, city, responses[0]);
   lap('路邊停車格（含開車時間）');
   var parking = queryParking(lat, lon, city, responses[1], tokenResponse);
@@ -842,8 +858,13 @@ function getGoogleToken(prefetched) {
   return token;
 }
 
+// Google 的 pb 把文字參數編成不帶 padding 的 urlsafe base64
+function b64url(text) {
+  return Utilities.base64EncodeWebSafe(text, Utilities.Charset.UTF_8).replace(/=+$/, '');
+}
+
 function googleSearchUrl(query, lat, lon, token) {
-  var q = Utilities.base64EncodeWebSafe(query, Utilities.Charset.UTF_8).replace(/=+$/, '');
+  var q = b64url(query);
   var pb = GOOGLE_SEARCH_PB.replace('{Q}', q).replace('{LNG}', lon).replace('{LAT}', lat).split('{TOKEN}').join(token);
   return GOOGLE_SEARCH_URL + '?tbm=map&authuser=0&hl=zh-TW&gl=tw&q=' + encodeURIComponent(query) + '&pb=' + pb;
 }
@@ -932,6 +953,62 @@ function sameCarpark(a, b) {
   return ka.length >= 2 && kb.length >= 2 && (ka.indexOf(kb) >= 0 || kb.indexOf(ka) >= 0);
 }
 
+// ========== Google 開車時間（無金鑰、可併發） ==========
+
+function googleDirectionsUrl(fromLat, fromLon, toLat, toLon, token) {
+  var pb = GOOGLE_DIRECTIONS_PB
+    .replace('{FROM}', b64url(fromLat + ',' + fromLon))
+    .replace('{TO}', b64url(toLat + ',' + toLon))
+    .replace('{LNG}', fromLon).replace('{LAT}', fromLat)
+    .replace('{TOKEN}', token);
+  return GOOGLE_DIRECTIONS_URL + '?authuser=0&hl=zh-TW&gl=tw&pb=' + pb;
+}
+
+// 解析 directions RPC：data[0][20] 是各模式的時間 [[modeId], _, [秒數, "N 分"]]，modeId 0 是開車；
+// 距離在第一條路線 data[0][1][0][0][2] = [公尺, "400 公尺"]。任何一段對不上回 null
+function parseGoogleDrive(body) {
+  var text = body.indexOf(")]}'") === 0 ? body.slice(body.indexOf('\n') + 1) : body;
+  var data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    return null;
+  }
+  var d0 = data && data[0];
+  if (!Array.isArray(d0) || !Array.isArray(d0[20])) return null;
+  var seconds = null;
+  d0[20].forEach(function (mode) {
+    if (mode && mode[0] && mode[0][0] === 0 && mode[2] && typeof mode[2][0] === 'number') seconds = mode[2][0];
+  });
+  if (seconds === null) return null;
+  var route = d0[1] && d0[1][0] && d0[1][0][0];
+  var meters = route && route[2] && typeof route[2][0] === 'number' ? route[2][0] : null;
+  return { seconds: seconds, meters: meters };
+}
+
+// 多個目的地一次算：回傳與 targets 對齊的 [{seconds, meters}|null]；token 拿不到或整批失敗回 null，呼叫端退回逐筆
+function driveTimesBatch(fromLat, fromLon, targets) {
+  if (!DRIVE_TIME_RPC_ENABLED || !targets.length) return null;
+  try {
+    var token = getGoogleToken();
+    if (!token) return null;
+    var responses = fetchAllSafe(targets.map(function (t) {
+      return { url: googleDirectionsUrl(fromLat, fromLon, t.lat, t.lon, token), headers: { 'accept-language': 'zh-TW' }, muteHttpExceptions: true };
+    }));
+    var results = responses.map(function (r) {
+      return r && r.getResponseCode() === 200 ? parseGoogleDrive(r.getContentText()) : null;
+    });
+    if (results.every(function (r) { return r === null; })) {
+      CacheService.getScriptCache().remove('google_kei');  // 全部空手多半是 token 失效
+      return null;
+    }
+    return results;
+  } catch (err) {
+    Logger.log('開車時間批次失敗: ' + err);
+    return null;
+  }
+}
+
 // ========== 距離與導航 ==========
 
 // Google 開車時間；本次執行預算用完、配額用完或查不到路線回 null，呼叫端退回直線距離
@@ -968,14 +1045,22 @@ function rankByTravel(lat, lon, entries, driveCount) {
     return 'drive_' + lat.toFixed(3) + '_' + lon.toFixed(3) + '_' + e.lat.toFixed(5) + '_' + e.lon.toFixed(5);
   });
   var cached = keys.length ? cache.getAll(keys) : {};
+  var misses = [];
   for (var j = 0; j < count; j++) {
-    if (cached[keys[j]]) {
-      entries[j].drive = JSON.parse(cached[keys[j]]);
-      continue;
-    }
-    entries[j].drive = driveTime(lat, lon, entries[j].lat, entries[j].lon);
-    if (entries[j].drive) cache.put(keys[j], JSON.stringify(entries[j].drive), DRIVE_TIME_CACHE_SECONDS);
+    if (cached[keys[j]]) entries[j].drive = JSON.parse(cached[keys[j]]);
+    else misses.push(j);
   }
+  // 沒快取的一起用 RPC 併發算，共用同一份每次執行的預算；RPC 整批失敗就把預算還回去讓逐筆版接手
+  misses = misses.slice(0, Math.max(0, driveTimeCallsLeft));
+  driveTimeCallsLeft -= misses.length;
+  var batch = driveTimesBatch(lat, lon, misses.map(function (j) { return entries[j]; }));
+  if (batch === null) driveTimeCallsLeft += misses.length;
+  misses.forEach(function (j, n) {
+    var drive = batch ? batch[n] : null;
+    if (drive && drive.meters === null) drive.meters = Math.round(entries[j].km * 1000);  // 距離解析不到就用直線
+    entries[j].drive = drive || (batch === null ? driveTime(lat, lon, entries[j].lat, entries[j].lon) : null);
+    if (entries[j].drive) cache.put(keys[j], JSON.stringify(entries[j].drive), DRIVE_TIME_CACHE_SECONDS);
+  });
   var head = entries.slice(0, count).sort(function (a, b) {
     var sa = a.drive ? a.drive.seconds : Infinity;
     var sb = b.drive ? b.drive.seconds : Infinity;
