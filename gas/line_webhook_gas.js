@@ -50,8 +50,10 @@ var KLCG_LIVE_STALE_MS = 24 * 60 * 60 * 1000
 var SEARCH_RADIUS_KM = 1.0
 var MAX_EVENTS = 10
 // 直線最近的前幾筆再問 Google 開車時間（一般帳號 directions 每日 1,000 次）
-var DRIVE_TIME_SEGMENTS = 5
-var DRIVE_TIME_CARPARKS = 3
+var DRIVE_TIME_SEGMENTS = 3
+var DRIVE_TIME_CARPARKS = 2
+// 同一起點格（約 100m）到同一終點的開車時間快取 30 分鐘：原地重查、同區的人接連查都不再問 Google
+var DRIVE_TIME_CACHE_SECONDS = 1800
 // 一次 doPost 執行的 directions 總預算：端點不驗來源，一個 POST 塞 10 個位置事件不能變成 80 次呼叫
 var DRIVE_TIME_BUDGET = DRIVE_TIME_SEGMENTS + DRIVE_TIME_CARPARKS
 var driveTimeCallsLeft = DRIVE_TIME_BUDGET
@@ -118,10 +120,13 @@ function buildReply(lat, lon) {
   var city = resolveTDXCity(lat, lon);
   var radiusM = Math.round(SEARCH_RADIUS_KM * 1000);
   var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + radiusM + ')');
+  // 新北／基隆的即時剩餘快取失效時，把那幾筆請求併進同一批，不要等 TDX 回來才開始抓
+  var liveRequests = liveCacheRequests(city);
   var responses = tdxFetchAll([
     BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=10',
     BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=5'
-  ]);
+  ], liveRequests);
+  primeLiveCache(city, responses.slice(2));
   var onStreet = queryOnStreet(lat, lon, city, responses[0]);
   var parking = queryParking(lat, lon, city, responses[1]);
   
@@ -261,9 +266,11 @@ function fetchAllSafe(requests) {
   });
 }
 
-// 多個 TDX GET 併發：各挑一把金鑰同時發出；哪一筆撞到金鑰問題就標記用滿，退回 tdxFetch 換把重試
-function tdxFetchAll(urls) {
+// 多個 TDX GET 併發：各挑一把金鑰同時發出；哪一筆撞到金鑰問題就標記用滿，退回 tdxFetch 換把重試。
+// extraRequests 是不需要 TDX 金鑰的其他請求，搭同一批發出，回傳陣列接在 TDX 結果後面（失敗為 null）
+function tdxFetchAll(urls, extraRequests) {
   if (!TDX_KEYS.length) throw new Error('TDX_KEYS 未設定或格式錯誤');
+  extraRequests = extraRequests || [];
   var keyIndexes = urls.map(function () { return pickTDXKey(); });
   // 沒有可用金鑰或拿不到 token 的那幾筆不進批次，直接交給 tdxFetch 處理（它會回 429 空 response）
   var slots = [];
@@ -274,15 +281,16 @@ function tdxFetchAll(urls) {
     slots.push(i);
     requests.push({ url: url, method: 'get', headers: { 'authorization': 'Bearer ' + token }, muteHttpExceptions: true });
   });
-  var batch = requests.length ? fetchAllSafe(requests) : [];
+  var batch = requests.length + extraRequests.length ? fetchAllSafe(requests.concat(extraRequests)) : [];
   var responses = [];
   slots.forEach(function (i, n) { responses[i] = batch[n]; });
-  return urls.map(function (url, i) {
+  var tdxResponses = urls.map(function (url, i) {
     var code = responses[i] ? responses[i].getResponseCode() : 0;
     if (code && code !== 429 && code !== 401 && code !== 403) return responses[i];
     if (keyIndexes[i] >= 0) markTDXKeyExhausted(keyIndexes[i]);
     return tdxFetch(url);
   });
+  return tdxResponses.concat(batch.slice(requests.length));
 }
 
 // 用 Google 反查座標所在縣市，回傳 TDX City 代碼；查不到回傳 null
@@ -425,10 +433,22 @@ function twd97ToWgs84(x, y) {
 
 // 新北開放資料每頁最多 1000 筆：前三頁併發抓，最後一頁仍滿頁就再逐頁補。
 // 任一頁失敗回 null，不能讓半份清單被當成完整資料快取 6 小時
+function ntpcPageUrl(dataset, page) {
+  return NTPC_API + dataset + '/json?page=' + page + '&size=' + NTPC_PAGE_SIZE;
+}
+
+function ntpcFirstPageRequests(dataset) {
+  return [0, 1, 2].map(function (p) { return { url: ntpcPageUrl(dataset, p), muteHttpExceptions: true }; });
+}
+
 function ntpcFetchAllPages(dataset) {
-  var pageUrl = function (page) { return NTPC_API + dataset + '/json?page=' + page + '&size=' + NTPC_PAGE_SIZE; };
+  return ntpcRowsFromPages(dataset, fetchAllSafe(ntpcFirstPageRequests(dataset)));
+}
+
+// responses 是前三頁的回應（可能含 null）；不足一頁就停，仍滿頁就逐頁補
+function ntpcRowsFromPages(dataset, responses) {
+  var pageUrl = function (page) { return ntpcPageUrl(dataset, page); };
   var rows = [];
-  var responses = fetchAllSafe([0, 1, 2].map(function (p) { return { url: pageUrl(p), muteHttpExceptions: true }; }));
   var lastCount = 0;
   for (var i = 0; i < responses.length; i++) {
     if (!responses[i] || responses[i].getResponseCode() !== 200) return null;
@@ -475,21 +495,25 @@ function getNtpcCarparks() {
 
 // 新北即時剩餘汽車位 { ID: 剩餘數 }，來源每 3 分鐘更新，快取 180s
 function getNtpcLive() {
-  var cache = CacheService.getScriptCache();
-  var cached = cacheGetChunked(cache, 'ntpc_live');
+  var cached = cacheGetChunked(CacheService.getScriptCache(), 'ntpc_live');
   if (cached) return JSON.parse(cached);
-  var live = {};
   try {
-    var rows = ntpcFetchAllPages(NTPC_CARPARK_LIVE);
-    if (!rows) return live;
-    for (var i = 0; i < rows.length; i++) {
-      var n = Number(rows[i].AVAILABLECAR);
-      if (rows[i].ID && n >= 0) live[rows[i].ID] = n;
-    }
-    if (rows.length) cachePutChunked(cache, 'ntpc_live', JSON.stringify(live), 180);
+    return cacheNtpcLive(ntpcFetchAllPages(NTPC_CARPARK_LIVE));
   } catch (err) {
     Logger.log('新北即時車位錯誤: ' + err);
+    return {};
   }
+}
+
+// rows 為 null（抓取失敗）時回空表且不寫快取
+function cacheNtpcLive(rows) {
+  var live = {};
+  if (!rows) return live;
+  for (var i = 0; i < rows.length; i++) {
+    var n = Number(rows[i].AVAILABLECAR);
+    if (rows[i].ID && n >= 0) live[rows[i].ID] = n;
+  }
+  if (rows.length) cachePutChunked(CacheService.getScriptCache(), 'ntpc_live', JSON.stringify(live), 180);
   return live;
 }
 
@@ -578,25 +602,29 @@ function getKlcgCarparks() {
 
 // 基隆即時剩餘 { 正規化名稱: 剩餘數 }，快取 180s；更新時間超過一天的視為失聯不採用
 function getKlcgLive() {
-  var cache = CacheService.getScriptCache();
-  var cached = cache.get('klcg_live');
+  var cached = CacheService.getScriptCache().get('klcg_live');
   if (cached) return JSON.parse(cached);
-  var live = {};
   try {
     var response = UrlFetchApp.fetch(KLCG_LIVE_PAGE, { muteHttpExceptions: true });
-    if (response.getResponseCode() !== 200) return live;
-    var html = response.getContentText();
-    var row = /<td>([^<]+)<\/td>\s*<td>(\d+)<\/td>\s*<td>([^<]+)<\/td>/g;
-    var m;
-    while ((m = row.exec(html)) !== null) {
-      var updated = new Date(m[3].trim().replace(' ', 'T') + ':00+08:00').getTime();
-      if (isNaN(updated) || Date.now() - updated > KLCG_LIVE_STALE_MS) continue;
-      live[klcgNormalizeName(m[1])] = Number(m[2]);
-    }
-    if (Object.keys(live).length) cache.put('klcg_live', JSON.stringify(live), 180);
+    return cacheKlcgLive(response.getResponseCode() === 200 ? response.getContentText() : null);
   } catch (err) {
     Logger.log('基隆即時車位錯誤: ' + err);
+    return {};
   }
+}
+
+// html 為 null（抓取失敗）時回空表且不寫快取
+function cacheKlcgLive(html) {
+  var live = {};
+  if (!html) return live;
+  var row = /<td>([^<]+)<\/td>\s*<td>(\d+)<\/td>\s*<td>([^<]+)<\/td>/g;
+  var m;
+  while ((m = row.exec(html)) !== null) {
+    var updated = new Date(m[3].trim().replace(' ', 'T') + ':00+08:00').getTime();
+    if (isNaN(updated) || Date.now() - updated > KLCG_LIVE_STALE_MS) continue;
+    live[klcgNormalizeName(m[1])] = Number(m[2]);
+  }
+  if (Object.keys(live).length) CacheService.getScriptCache().put('klcg_live', JSON.stringify(live), 180);
   return live;
 }
 
@@ -647,6 +675,29 @@ function klcgCarparksNear(lat, lon, radiusKm) {
   });
 }
 
+// 該縣市即時剩餘的快取若已失效，回傳要抓的請求，讓 buildReply 併進 TDX 那一批；快取還在就回空陣列
+function liveCacheRequests(city) {
+  var cache = CacheService.getScriptCache();
+  switch (city) {
+    case 'NewTaipei': return cache.get('ntpc_live') ? [] : ntpcFirstPageRequests(NTPC_CARPARK_LIVE);
+    case 'Keelung': return cache.get('klcg_live') ? [] : [{ url: KLCG_LIVE_PAGE, muteHttpExceptions: true }];
+    default: return [];
+  }
+}
+
+// 把 liveCacheRequests 那幾筆的回應寫進快取；responses 為空表示快取原本就在
+function primeLiveCache(city, responses) {
+  if (!responses.length) return;
+  try {
+    switch (city) {
+      case 'NewTaipei': cacheNtpcLive(ntpcRowsFromPages(NTPC_CARPARK_LIVE, responses)); break;
+      case 'Keelung': cacheKlcgLive(responses[0] && responses[0].getResponseCode() === 200 ? responses[0].getContentText() : null); break;
+    }
+  } catch (err) {
+    Logger.log('即時車位預載錯誤: ' + err);
+  }
+}
+
 // 市府沒上傳 TDX 的縣市，補上該市自己的開放資料
 function extraCarparksNear(city, lat, lon, radiusKm) {
   switch (city) {
@@ -687,8 +738,18 @@ function rankByTravel(lat, lon, entries, driveCount) {
   }
   entries.sort(function (a, b) { return a.km - b.km; });
   var count = Math.min(driveCount, entries.length);
+  var cache = CacheService.getScriptCache();
+  var keys = entries.slice(0, count).map(function (e) {
+    return 'drive_' + lat.toFixed(3) + '_' + lon.toFixed(3) + '_' + e.lat.toFixed(5) + '_' + e.lon.toFixed(5);
+  });
+  var cached = cache.getAll(keys);
   for (var j = 0; j < count; j++) {
+    if (cached[keys[j]]) {
+      entries[j].drive = JSON.parse(cached[keys[j]]);
+      continue;
+    }
     entries[j].drive = driveTime(lat, lon, entries[j].lat, entries[j].lon);
+    if (entries[j].drive) cache.put(keys[j], JSON.stringify(entries[j].drive), DRIVE_TIME_CACHE_SECONDS);
   }
   var head = entries.slice(0, count).sort(function (a, b) {
     var sa = a.drive ? a.drive.seconds : Infinity;
