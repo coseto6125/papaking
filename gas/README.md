@@ -14,6 +14,8 @@
    | `LINE_CHANNEL_ACCESS_TOKEN` | LINE Developers Console 的 Channel access token |
    | `TDX_KEYS` | TDX 金鑰陣列，JSON 格式：`[{"id":"...","secret":"..."}]` |
 
+   選填：`MONTHLY_QUOTA`（每人每月次數）、`MONTHLY_BUDGET`（所有人每月合計，一般使用者只用到 85%，15% 留給白名單）、`QUOTA_WHITELIST`（逗號分隔 LINE userId，對 Bot 傳「id」可查）。沒設就不限。
+
    `TDX_KEYS` 可放多把。基礎會員每把 5 次/分，程式依本分鐘用量挑用得最少的一把；撞到 429（頻率上限）或 401/403（金鑰失效）會自動換下一把，全部用滿時回覆使用者稍後再試。
 5. 部署為 Web App（執行身分：我，存取權：任何人）
 

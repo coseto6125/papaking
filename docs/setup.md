@@ -150,6 +150,16 @@ clasp create-deployment --deploymentId <上面抄的 id> --description "v2"   # 
 
    多把 TDX 金鑰就多放幾個物件：`[{"id":"a","secret":"b"},{"id":"c","secret":"d"}]`。
 
+   自己用不用設額度。要分享給別人、又不想把 TDX 點數用光，再加這幾筆（都選填，沒設就是不限）：
+
+   | 屬性 | 值 |
+   |------|-----|
+   | `MONTHLY_QUOTA` | 每個使用者每月可查幾次，例如 `3` |
+   | `MONTHLY_BUDGET` | 所有人每月合計可查幾次；一般使用者只能用到 85%，剩下 15% 留給白名單修正與測試 |
+   | `QUOTA_WHITELIST` | 逗號分隔的 LINE userId，不受個人額度限制。對 Bot 傳「id」會回自己的 userId |
+
+   計數存在指令碼屬性，使用者 ID 只存加鹽雜湊，每月自動清掉上個月的。使用者的座標不寫入執行記錄。
+
 3. 儲存。
 
 指令碼屬性沒有公開 API，clasp 也設不了，這一步只能在網頁做，但只做一次。
@@ -202,6 +212,11 @@ Google Maps 的免費配額（一般帳號每日約 1,000 次路線查詢）用�
 #### Channel secret 要填哪？
 
 不用填。GAS 讀不到 LINE 的簽章標頭，程式沒做簽章驗證。這也代表任何知道 Web App URL 的人都能觸發查詢，URL 別公開。
+
+#### 白名單要填的 LINE userId 從哪拿？
+
+自己的：LINE Developers Console 進這個 channel 的「Basic settings」分頁，最下面「Your user ID」，U 開頭。
+別人的：請對方在和 Bot 的一對一聊天傳「id」，Bot 會回他的 userId，貼給你加進 `QUOTA_WHITELIST`。群組裡傳「id」不會回，免得把 userId 秀給整個群組。
 
 #### 可以放在同一個 Google 帳號的多個專案嗎？金鑰會不會互相影響？
 
