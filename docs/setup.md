@@ -213,6 +213,11 @@ Google Maps 的免費配額（一般帳號每日約 1,000 次路線查詢）用�
 
 不用填。GAS 讀不到 LINE 的簽章標頭，程式沒做簽章驗證。這也代表任何知道 Web App URL 的人都能觸發查詢，URL 別公開。
 
+#### 白名單要填的 LINE userId 從哪拿？
+
+自己的：LINE Developers Console 進這個 channel 的「Basic settings」分頁，最下面「Your user ID」，U 開頭。
+別人的：請對方在和 Bot 的一對一聊天傳「id」，Bot 會回他的 userId，貼給你加進 `QUOTA_WHITELIST`。群組裡傳「id」不會回，免得把 userId 秀給整個群組。
+
 #### 可以放在同一個 Google 帳號的多個專案嗎？金鑰會不會互相影響？
 
 指令碼屬性是每個專案獨立的，互不影響。TDX 的每分鐘額度是算金鑰的，兩個專案用同一把就要分著用。
