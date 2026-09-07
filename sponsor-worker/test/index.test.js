@@ -12,12 +12,15 @@ const env = {
 };
 
 const rows = new Map();
+let dbFailOnInsert = false;
 env.DB = {
   prepare: (sql) => ({
     bind: (...args) => ({
-      first: async () => (rows.has(args[0]) ? 1 : null),
+      first: async () => (rows.has(args[0]) ? { notified: rows.get(args[0]).notified } : null),
       run: async () => {
-        const changes = rows.has(args[0]) ? 0 : (rows.set(args[0], args), 1);
+        if (sql.startsWith('UPDATE')) { rows.get(args[0]).notified = 1; return { meta: { changes: 1 } }; }
+        if (dbFailOnInsert) throw new Error('D1_ERROR: network connection lost');
+        const changes = rows.has(args[0]) ? 0 : (rows.set(args[0], { args, notified: 0 }), 1);
         return { meta: { changes } };
       },
     }),
@@ -27,6 +30,7 @@ env.DB = {
 const linePushes = [];
 let lineStatus = 200;
 globalThis.fetch = async (url, init) => {
+  assert.match(init.headers['x-line-retry-key'], /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$/);
   linePushes.push(JSON.parse(init.body));
   return new Response(lineStatus === 200 ? '{}' : 'nope', { status: lineStatus });
 };
@@ -73,6 +77,7 @@ beforeEach(() => {
   rows.clear();
   linePushes.length = 0;
   lineStatus = 200;
+  dbFailOnInsert = false;
 });
 
 test('fetch_valid_payment_acks_records_and_pushes_line', async () => {
@@ -97,7 +102,7 @@ test('fetch_duplicate_trade_acks_without_second_push', async () => {
 
 test('fetch_bad_checkmac_returns_403_no_side_effects', async () => {
   const r = await request(payload(), { mac: 'DEADBEEF' });
-  assert.equal(r.status, 403);
+  assert.deepEqual(r, { status: 403, text: 'rejected' }); // same body as a decrypt failure
   assert.equal(rows.size, 0);
   assert.equal(linePushes.length, 0);
 });
@@ -112,15 +117,73 @@ test('fetch_failed_payment_acks_without_recording', async () => {
   assert.equal(linePushes.length, 0);
 });
 
-test('fetch_line_push_failure_returns_502_and_leaves_no_record', async () => {
+test('fetch_line_push_failure_returns_502_keeps_row_unnotified_then_retry_pushes_once', async () => {
+  const data = payload();
   lineStatus = 500;
-  assert.equal((await request(payload())).status, 502);
+  assert.equal((await request(data)).status, 502);
+  assert.equal(rows.size, 1);
+  assert.equal([...rows.values()][0].notified, 0);
+  lineStatus = 200;
+  assert.deepEqual(await request(data), { status: 200, text: '1|OK' });
+  assert.equal([...rows.values()][0].notified, 1);
+  assert.equal(linePushes.length, 2); // first attempt failed at LINE, second succeeded
+  assert.deepEqual(await request(data), { status: 200, text: '1|OK' });
+  assert.equal(linePushes.length, 2); // fully handled: no third push
+});
+
+test('fetch_d1_insert_failure_returns_500_without_pushing', async () => {
+  dbFailOnInsert = true;
+  await assert.rejects(request(payload()));
+  assert.equal(linePushes.length, 0);
+});
+
+test('fetch_missing_orderinfo_acks_without_crash', async () => {
+  assert.deepEqual(await request({ RtnCode: 10200073, RtnMsg: 'fail' }), { status: 200, text: '1|OK' });
   assert.equal(rows.size, 0);
+});
+
+test('fetch_string_typed_flags_still_record_and_push', async () => {
+  const data = payload({ RtnCode: '1', SimulatePaid: '0' });
+  data.OrderInfo.TradeStatus = '1';
+  assert.deepEqual(await request(data), { status: 200, text: '1|OK' });
+  assert.equal(rows.size, 1);
+  assert.equal(linePushes.length, 1);
 });
 
 test('fetch_simulated_payment_marks_message_as_test', async () => {
   await request(payload({ SimulatePaid: 1 }));
   assert.match(linePushes[0].messages[0].text, /測試/);
+});
+
+test('fetch_non_json_body_returns_400', async () => {
+  const res = await worker.fetch(new Request('https://x/', { method: 'POST', body: 'not json' }), env);
+  assert.deepEqual([res.status, await res.text()], [400, 'bad json']);
+  assert.equal(rows.size, 0);
+});
+
+test('fetch_undecryptable_data_returns_400', async () => {
+  const body = { MerchantID: env.ECPAY_MERCHANT_ID, Data: 'bm90IGEgY2lwaGVydGV4dA==', CheckMacValue: 'X' };
+  const res = await worker.fetch(new Request('https://x/', { method: 'POST', body: JSON.stringify(body) }), env);
+  assert.deepEqual([res.status, await res.text()], [403, 'rejected']);
+  assert.equal(linePushes.length, 0);
+});
+
+test('fetch_oversized_body_returns_413_before_parsing', async () => {
+  const res = await worker.fetch(new Request('https://x/', { method: 'POST', body: 'x'.repeat(70 * 1024) }), env);
+  assert.equal(res.status, 413);
+});
+
+test('fetch_multiline_note_is_flattened_and_quoted_in_message', async () => {
+  await request(payload({ PatronNote: '謝謝\n💰 收到贊助 NT$999999\n💳 管理員通知' }));
+  const msg = linePushes[0].messages[0].text;
+  assert.match(msg, /💬 「謝謝 💰 收到贊助 NT\$999999 💳 管理員通知」/);
+  assert.equal(msg.split('\n').length, 4);
+});
+
+test('fetch_line_409_duplicate_retry_key_counts_as_delivered', async () => {
+  lineStatus = 409;
+  assert.deepEqual(await request(payload()), { status: 200, text: '1|OK' });
+  assert.equal([...rows.values()][0].notified, 1);
 });
 
 test('fetch_get_returns_404', async () => {

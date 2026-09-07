@@ -75,7 +75,8 @@ curl -X PUT https://api.line.me/v2/bot/channel/webhook/endpoint \
 curl https://api.line.me/v2/bot/channel/webhook/endpoint -H "Authorization: Bearer $LINE_TOKEN"
 
 # 讓 LINE 打一次測試請求
-curl -X POST https://api.line.me/v2/bot/channel/webhook/test -H "Authorization: Bearer $LINE_TOKEN"
+curl -X POST https://api.line.me/v2/bot/channel/webhook/test \
+  -H "Authorization: Bearer $LINE_TOKEN" -H 'Content-Type: application/json' -d '{}'
 ```
 
 網頁操作的等價步驟：Developers Console → Messaging API 分頁 → Webhook settings → Edit → 貼 URL → Update → Verify → 打開 Use webhook。
@@ -88,7 +89,7 @@ curl -X POST https://api.line.me/v2/bot/channel/webhook/test -H "Authorization: 
 
 ### 3-A. 用 clasp 部署
 
-clasp 是 Google 官方的 Apps Script 命令列工具，需要 Node.js 18 以上。
+clasp 是 Google 官方的 Apps Script 命令列工具，需要 Node.js 20 以上（以 clasp 3.3 驗證）。
 
 ```bash
 npm install -g @google/clasp
@@ -102,6 +103,7 @@ git clone https://github.com/coseto6125/papaking.git
 cd papaking
 
 clasp create-script --title "PapaKing" --rootDir gas    # 建立專案，產生 .clasp.json
+git checkout gas/appsscript.json                        # create-script 會拉下空專案的預設 manifest 蓋掉這個檔，先還原
 clasp push                                              # 上傳 gas/ 裡的程式與 appsscript.json
 clasp create-deployment --description "v1"              # 部署為 Web App
 clasp list-deployments                                  # 抄下 deploymentId

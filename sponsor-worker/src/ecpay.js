@@ -19,7 +19,8 @@ export async function decryptData(hashKey, hashIV, base64) {
   const key = await aesKey(hashKey, 'decrypt');
   const cipher = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
   const plain = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: te.encode(hashIV) }, key, cipher);
-  return decodeURIComponent(td.decode(plain));
+  // ECPay does not say whether it URL-encodes with %20 or + for spaces; a literal + is %2B under both, so this is safe
+  return decodeURIComponent(td.decode(plain).replace(/\+/g, '%20'));
 }
 
 export async function encryptData(hashKey, hashIV, plain) {

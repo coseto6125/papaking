@@ -20,7 +20,7 @@ npx wrangler secret put ECPAY_MERCHANT_ID    # 綠界後台 > 廠商資料 > 特
 npx wrangler secret put ECPAY_HASH_KEY       # 綠界後台 > 系統開發管理 > 系統介接設定 > HashKey (16 chars)
 npx wrangler secret put ECPAY_HASH_IV        # same page, HashIV (16 chars)
 npx wrangler secret put LINE_CHANNEL_ACCESS_TOKEN   # any Messaging API channel, papaking's works
-npx wrangler secret put LINE_TO              # your own LINE userId (U...), see below
+npx wrangler secret put LINE_TO              # your own LINE userId (U...), see below; you must be a friend of that OA
 npm run deploy                               # prints https://papaking-sponsor.<subdomain>.workers.dev
 ```
 
@@ -28,18 +28,20 @@ Paste the printed URL into 綠界後台 > 收款工具 > 實況主收款 > 付�
 
 ### Finding your LINE userId
 
-Send any message to the papaking bot, then read the webhook event's `source.userId` from the Apps Script execution log. Alternatively, LINE Developers Console > channel > Basic settings > "Your user ID".
+LINE Developers Console > the channel whose token you used > Basic settings > "Your user ID" (starts with `U`).
+Push messages only reach users who have added that channel's official account as a friend, so add it first and send yourself one test push before trusting the pipeline.
 
 ## What ECPay sends
 
 `POST` JSON: `MerchantID`, `RpHeader.Timestamp`, `TransCode`, `TransMsg`, `Data` (AES-128-CBC, base64), `CheckMacValue`.
 `Data` decrypts to: `RtnCode`, `RtnMsg`, `PatronName`, `PatronNote`, `DonateURL`, `LivestreamURL`, `SimulatePaid`, `OrderInfo{MerchantTradeNo, TradeNo, TradeAmt, TradeDate, PaymentType, PaymentDate, TradeStatus, ChargeFee}`.
 
-The worker replies exactly `1|OK`. Any other body makes ECPay retry every 5–15 min, up to 4 times a day; the worker uses that on purpose when the LINE push fails.
+The worker replies exactly `1|OK`. Any other body makes ECPay retry every 5–15 min, up to 4 times a day. The row is inserted before the LINE push (dedup is atomic on `merchant_trade_no`); if the push fails the worker answers 502 so ECPay retries, and the retry pushes again because the row still has `notified = 0`.
 
 ## Local run
 
 ```bash
-cp .dev.vars.example .dev.vars   # fill secrets
-npx wrangler dev                 # http://localhost:8787
+cp .dev.vars.example .dev.vars                                    # fill secrets
+npx wrangler d1 execute papaking-sponsor --local --file schema.sql  # local D1 is separate from the remote one
+npx wrangler dev                                                  # http://localhost:8787
 ```
