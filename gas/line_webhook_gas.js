@@ -47,6 +47,8 @@ var KLCG_STATIC_CSV = 'https://www.klcg.gov.tw/wSite/public/Attachment/01602/f17
 var KLCG_LIVE_PAGE = 'https://e-traffic.klcg.gov.tw/KeelungTraffic/pages/park.jsp'
 // 基隆即時頁有些場站的時間戳停在幾個月前，超過一天視為失聯；新北的即時 API 沒有時間戳，整份每 3 分鐘更新
 var KLCG_LIVE_STALE_MS = 24 * 60 * 60 * 1000
+// Google Maps Platform 條款只允許 geocode 座標暫存 30 天，到期重查（22 座場站一年不到 300 次配額）
+var GEOCODE_TTL_MS = 30 * 24 * 60 * 60 * 1000
 var SEARCH_RADIUS_KM = 1.0
 // Google 地圖搜尋 RPC（沒有金鑰、非公開介面）補 TDX 與市府資料都沒有的私營場站。
 // 只有名稱、地址、座標、營業時間，沒有格數、剩餘、費率；欄位位置一改就會靜默失效。
@@ -679,13 +681,16 @@ function ntpcCarparksNear(lat, lon, radiusKm) {
 
 // ========== 基隆開放資料 ==========
 
-// 地址 → 經緯度。查到的永久存在 ScriptProperties（geocode 配額每日 1,000，一個地址只該花一次）；
-// 查無結果只在 CacheService 記 6h 後重試（地址寫法或 Google 的解析會變）；暫時性錯誤回 false，不記錄
+// 地址 → 經緯度。查到的存 ScriptProperties 為「lat,lng,查到的毫秒時間」，30 天內直接用，過期重查
+// （舊版沒有時間戳的值視為過期）；查無結果只在 CacheService 記 6h 後重試（地址寫法或 Google 的解析會變）；
+// 暫時性錯誤回 false，不記錄
 function geocodeCached(address) {
   var props = PropertiesService.getScriptProperties();
   var key = 'geo_' + address;
-  var cached = props.getProperty(key);
-  if (cached) return { lat: Number(cached.split(',')[0]), lon: Number(cached.split(',')[1]) };
+  var cached = (props.getProperty(key) || '').split(',');
+  if (cached.length === 3 && Date.now() - Number(cached[2]) < GEOCODE_TTL_MS) {
+    return { lat: Number(cached[0]), lon: Number(cached[1]) };
+  }
   var cache = CacheService.getScriptCache();
   if (cache.get(key)) return null;
   try {
@@ -696,7 +701,7 @@ function geocodeCached(address) {
       cache.put(key, 'none', 21600);
       return null;
     }
-    props.setProperty(key, loc.lat + ',' + loc.lng);
+    props.setProperty(key, loc.lat + ',' + loc.lng + ',' + Date.now());
     return { lat: loc.lat, lon: loc.lng };
   } catch (err) {
     Logger.log('地址反查失敗 ' + address + ': ' + err);
