@@ -1,0 +1,14 @@
+{
+  "name": "papaking-sponsor-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "schema": "wrangler d1 execute papaking-sponsor --remote --file schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.129.1"
+  }
+}
