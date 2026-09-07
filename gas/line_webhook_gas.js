@@ -16,6 +16,17 @@ var LINE_CHANNEL_ACCESS_TOKEN = PROPS.getProperty('LINE_CHANNEL_ACCESS_TOKEN')
 // TDX 基礎會員每把金鑰 5 次/分；依本分鐘用量挑金鑰，撞上限自動換下一把
 var TDX_KEYS = parseTDXKeys(PROPS.getProperty('TDX_KEYS'))
 var TDX_RATE_LIMIT = 5
+// 額度（都是選填，沒設或 0 = 不限）：
+//   MONTHLY_QUOTA   每個使用者每月可查幾次
+//   MONTHLY_BUDGET  全部使用者每月合計可查幾次；一般使用者只能用到 PUBLIC_SHARE，剩下留給白名單修正與測試
+//   QUOTA_WHITELIST 逗號分隔的 LINE userId，不受 MONTHLY_QUOTA 限制、可用滿 MONTHLY_BUDGET；對 Bot 傳「id」會回自己的 userId
+var MONTHLY_QUOTA = Number(PROPS.getProperty('MONTHLY_QUOTA')) || 0
+var MONTHLY_BUDGET = Number(PROPS.getProperty('MONTHLY_BUDGET')) || 0
+var PUBLIC_SHARE = 0.85
+var QUOTA_WHITELIST = (PROPS.getProperty('QUOTA_WHITELIST') || '').split(',').map(function (s) { return s.trim(); }).filter(String)
+var SETUP_URL = 'https://github.com/coseto6125/papaking/blob/main/docs/setup.md'
+var QUOTA_USER_TEXT = '本月 ' + MONTHLY_QUOTA + ' 次額度已用完，下個月 1 號重置。\n想不限次數用，自己架一個只要 20 分鐘：\n' + SETUP_URL
+var QUOTA_BUDGET_TEXT = '本月公共額度已用完，下個月 1 號重置。\n想不限次數用，自己架一個只要 20 分鐘：\n' + SETUP_URL
 
 // 屬性是人工填的，JSON 打錯不能讓頂層丟例外——那會發生在 doPost 的 try 之前，
 // web app 直接回 500，執行記錄裡看不出跟 LINE 或 TDX 無關
@@ -135,7 +146,13 @@ function doPost(e) {
 
     for (var i = 0; i < events.length; i++) {
       var event = events[i];
-      if (event.type !== 'message' || !event.message || event.message.type !== 'location') continue;
+      if (event.type !== 'message' || !event.message) continue;
+      // 「id」只在一對一聊天回，群組裡回會把 userId 秀給整個群組
+      if (event.message.type === 'text' && /^id$/i.test((event.message.text || '').trim()) && event.source && event.source.type === 'user' && event.source.userId) {
+        replyLine(event.replyToken, 'LINE userId：' + event.source.userId);
+        continue;
+      }
+      if (event.message.type !== 'location') continue;
       // 一個事件失敗（回覆逾時、payload 異常）不能把同批其他使用者的事件一起帶掉
       try {
         handleLocation(event);
@@ -151,13 +168,63 @@ function doPost(e) {
   }
 }
 
+// 使用者的座標不寫進執行記錄，也不存任何地方
 function handleLocation(event) {
-  var lat = event.message.latitude;
-  var lon = event.message.longitude;
-  var replyToken = event.replyToken;
-  
-  Logger.log('查詢座標: ' + lat + ', ' + lon);
-  replyLine(replyToken, buildReply(lat, lon));
+  var refusal = consumeQuota(event.source || {});
+  if (refusal) {
+    replyLine(event.replyToken, refusal);
+    return;
+  }
+  replyLine(event.replyToken, buildReply(event.message.latitude, event.message.longitude));
+}
+
+// ========== 每月額度 ==========
+
+// 本月的計數鍵前綴；換月自動變新鍵，舊月的鍵由 purgeOldQuotaKeys 清掉
+function quotaPrefix() {
+  return 'quota_' + Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyyMM') + '_';
+}
+
+// 使用者計數鍵只存 userId 加鹽後 SHA-256 的前 16 位，屬性裡看不出誰是誰；鹽第一次用時產生
+function quotaUserKey(prefix, id) {
+  var salt = PROPS.getProperty('QUOTA_SALT');
+  if (!salt) {
+    salt = Utilities.getUuid();
+    PROPS.setProperty('QUOTA_SALT', salt);
+  }
+  var digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + id, Utilities.Charset.UTF_8);
+  var hex = digest.map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
+  return prefix + hex.slice(0, 16);
+}
+
+// 每 6 小時最多掃一次屬性，把不是本月的 quota_ 鍵刪掉
+function purgeOldQuotaKeys(prefix) {
+  var cache = CacheService.getScriptCache();
+  if (cache.get('quota_purged')) return;
+  var all = PROPS.getProperties();
+  Object.keys(all).forEach(function (k) {
+    if (k.indexOf('quota_') === 0 && k.indexOf(prefix) !== 0) PROPS.deleteProperty(k);
+  });
+  cache.put('quota_purged', '1', 21600);
+}
+
+// 扣一次額度。可以查回 null，不行回要回覆給使用者的文字。
+// 白名單：不看個人額度，全域預算可用到 100%；其他人個人額度看 MONTHLY_QUOTA，全域只能用到 PUBLIC_SHARE。
+// 沒有任何 id 的事件（群組裡沒同意隱私的人）只受全域預算限制
+function consumeQuota(source) {
+  if (!MONTHLY_QUOTA && !MONTHLY_BUDGET) return null;
+  var prefix = quotaPrefix();
+  purgeOldQuotaKeys(prefix);
+  var id = source.userId || source.groupId || source.roomId || '';
+  var listed = QUOTA_WHITELIST.indexOf(id) >= 0;
+  var totalKey = prefix + 'total';
+  var total = Number(PROPS.getProperty(totalKey)) || 0;
+  if (MONTHLY_BUDGET && total >= Math.floor(MONTHLY_BUDGET * (listed ? 1 : PUBLIC_SHARE))) return QUOTA_BUDGET_TEXT;
+  var userKey = MONTHLY_QUOTA && id && !listed ? quotaUserKey(prefix, id) : null;
+  if (userKey && (Number(PROPS.getProperty(userKey)) || 0) >= MONTHLY_QUOTA) return QUOTA_USER_TEXT;
+  if (userKey) PROPS.setProperty(userKey, String((Number(PROPS.getProperty(userKey)) || 0) + 1));
+  if (MONTHLY_BUDGET) PROPS.setProperty(totalKey, String(total + 1));
+  return null;
 }
 
 // 兩個 TDX NearBy 同時發出，之後的路段表、新北資料多半命中快取。
