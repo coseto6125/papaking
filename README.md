@@ -1,4 +1,13 @@
-# 🅿️ PapaKing - 台灣停車資訊查詢 LINE Bot
+<div align="center">
+  <img src="image/logo.png" alt="PapaKing 吉祥物：戴皇冠的藍色小車" width="200"/>
+  <h1>PapaKing</h1>
+  <p><b>台灣停車資訊查詢 LINE Bot</b></p>
+  <p>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/%E9%96%8B%E6%BA%90-CC%20BY--NC%204.0-1aa260?style=flat-square" alt="開源 CC BY-NC 4.0"/></a>
+    <img src="https://img.shields.io/badge/%E5%80%8B%E4%BA%BA%E4%BD%BF%E7%94%A8-%E5%85%8D%E8%B2%BB-1aa260?style=flat-square" alt="個人使用免費"/>
+    <a href="https://p.ecpay.com.tw/AA249AA"><img src="https://img.shields.io/badge/%E8%B4%8A%E5%8A%A9-%E7%B6%A0%E7%95%8C-ffb400?style=flat-square" alt="贊助"/></a>
+  </p>
+</div>
 
 基於 **TDX 運輸資料流通服務** 的停車資訊查詢系統，跑在 Google Apps Script 上，傳一個位置給 LINE Bot 就回附近的停車格與停車場。
 
