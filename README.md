@@ -62,6 +62,12 @@ papaking/
 - [TDX 運輸資料流通服務](https://tdx.transportdata.tw/) - 提供停車資料 API
 - [LINE Developers](https://developers.line.biz/) - LINE Bot 平台
 
+## ☕ 贊助
+
+這個 Bot 跑在免費額度上，維護靠愛發電。覺得好用的話，歡迎請作者喝杯咖啡；贊助時在「留言」寫下你想要的功能或縣市，有機會優先做：
+
+[![贊助](https://img.shields.io/badge/%E8%B4%8A%E5%8A%A9-%E7%B6%A0%E7%95%8C%20ECPay-1aa260?style=for-the-badge)](https://p.ecpay.com.tw/AA249AA)
+
 ## 📞 聯絡方式
 
 - 作者：coseto6125
