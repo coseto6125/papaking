@@ -147,15 +147,16 @@ function doPost(e) {
     for (var i = 0; i < events.length; i++) {
       var event = events[i];
       if (event.type !== 'message' || !event.message) continue;
-      // 「id」只在一對一聊天回，群組裡回會把 userId 秀給整個群組
-      if (event.message.type === 'text' && /^id$/i.test((event.message.text || '').trim()) && event.source && event.source.type === 'user' && event.source.userId) {
-        replyLine(event.replyToken, 'LINE userId：' + event.source.userId);
-        continue;
-      }
-      if (event.message.type !== 'location') continue;
+      var isIdCommand = event.message.type === 'text' && /^id$/i.test((event.message.text || '').trim());
+      if (!isIdCommand && event.message.type !== 'location') continue;
       // 一個事件失敗（回覆逾時、payload 異常）不能把同批其他使用者的事件一起帶掉
       try {
-        handleLocation(event);
+        if (isIdCommand) {
+          // 「id」只在一對一聊天回，群組裡回會把 userId 秀給整個群組
+          if (event.source && event.source.type === 'user' && event.source.userId) replyLine(event.replyToken, 'LINE userId：' + event.source.userId);
+        } else {
+          handleLocation(event);
+        }
       } catch (err) {
         Logger.log('事件 ' + i + ' 處理失敗: ' + err);
       }
@@ -197,7 +198,7 @@ function quotaUserKey(prefix, id) {
   return prefix + hex.slice(0, 16);
 }
 
-// 每 6 小時最多掃一次屬性，把不是本月的 quota_ 鍵刪掉
+// 把不是本月的 quota_ 鍵刪掉。用 6 小時的快取旗標壓低掃描頻率；CacheService 可能提前淘汰旗標，多掃一次也只是多讀一次屬性
 function purgeOldQuotaKeys(prefix) {
   var cache = CacheService.getScriptCache();
   if (cache.get('quota_purged')) return;
