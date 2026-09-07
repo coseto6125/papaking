@@ -682,16 +682,18 @@ function ntpcCarparksNear(lat, lon, radiusKm) {
 
 // ========== 基隆開放資料 ==========
 
-// 地址 → 經緯度。查到的存 ScriptProperties 為「lat,lng,查到的毫秒時間」，30 天內直接用，過期重查
-// （舊版沒有時間戳的值視為過期）；查無結果只在 CacheService 記 6h 後重試（地址寫法或 Google 的解析會變）；
-// 暫時性錯誤回 false，不記錄
+// 地址 → 經緯度 {lat, lon, at}，at 是 geocode 到的毫秒時間。存 ScriptProperties 為「lat,lng,at」，30 天內直接用；
+// 過期（含舊版沒有時間戳的值）先刪掉再重查，重查失敗也不會留著過期座標。
+// 查無結果只在 CacheService 記 6h 後重試（地址寫法或 Google 的解析會變）；暫時性錯誤回 false，不記錄
 function geocodeCached(address) {
   var props = PropertiesService.getScriptProperties();
   var key = 'geo_' + address;
-  var cached = (props.getProperty(key) || '').split(',');
+  var stored = props.getProperty(key);
+  var cached = (stored || '').split(',');
   if (cached.length === 3 && Date.now() - Number(cached[2]) < GEOCODE_TTL_MS) {
-    return { lat: Number(cached[0]), lon: Number(cached[1]) };
+    return { lat: Number(cached[0]), lon: Number(cached[1]), at: Number(cached[2]) };
   }
+  if (stored) props.deleteProperty(key);
   var cache = CacheService.getScriptCache();
   if (cache.get(key)) return null;
   try {
@@ -702,8 +704,9 @@ function geocodeCached(address) {
       cache.put(key, 'none', 21600);
       return null;
     }
-    props.setProperty(key, loc.lat + ',' + loc.lng + ',' + Date.now());
-    return { lat: loc.lat, lon: loc.lng };
+    var at = Date.now();
+    props.setProperty(key, loc.lat + ',' + loc.lng + ',' + at);
+    return { lat: loc.lat, lon: loc.lng, at: at };
   } catch (err) {
     Logger.log('地址反查失敗 ' + address + ': ' + err);
     return false;
@@ -716,7 +719,8 @@ function klcgNormalizeName(name) {
   return carparkNameKey(name.replace(/基隆市|基隆/g, ''));
 }
 
-// 基隆公有路外停車場 → [[名稱, 地址, lat, lon, 小型車格數], ...]，快取 6h
+// 基隆公有路外停車場 → [[名稱, 地址, lat, lon, 小型車格數], ...]，快取 6h；
+// 清單快取不能活過裡面最早 geocode 的座標的 30 天期限，所以 TTL 取兩者較短的
 function getKlcgCarparks() {
   var cache = CacheService.getScriptCache();
   var cached = cache.get('klcg_carparks');
@@ -727,6 +731,7 @@ function getKlcgCarparks() {
     if (response.getResponseCode() !== 200) return list;
     var rows = Utilities.parseCsv(response.getContentText('Big5'));
     var complete = true;
+    var oldestAt = Infinity;
     for (var i = 1; i < rows.length; i++) {
       var total = Number((/小型車(\d+)位/.exec(rows[i][1] || '') || [])[1]) || 0;
       if (!total) continue;
@@ -734,9 +739,11 @@ function getKlcgCarparks() {
       var point = geocodeCached(/基隆/.test(address) ? address : '基隆市' + address);
       if (point === false) complete = false;  // 暫時性錯誤：這次先少一座，但不把缺漏的清單快取 6h
       if (!point) continue;
+      oldestAt = Math.min(oldestAt, point.at);
       list.push([rows[i][0].trim(), address, Number(point.lat.toFixed(5)), Number(point.lon.toFixed(5)), total]);
     }
-    if (list.length && complete) cache.put('klcg_carparks', JSON.stringify(list), 21600);
+    var ttl = Math.min(21600, Math.floor((oldestAt + GEOCODE_TTL_MS - Date.now()) / 1000));
+    if (list.length && complete && ttl >= 1) cache.put('klcg_carparks', JSON.stringify(list), ttl);
   } catch (err) {
     Logger.log('基隆停車場清單錯誤: ' + err);
   }
