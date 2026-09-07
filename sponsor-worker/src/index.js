@@ -6,6 +6,7 @@ const text = (body, status = 200) =>
 
 const ACK = '1|OK'; // exact body ECPay expects; anything else triggers retries (5-15 min apart, 4/day)
 const MAX_BODY = 64 * 1024; // a real callback is a few hundred bytes
+const SECRETS = ['ECPAY_MERCHANT_ID', 'ECPAY_HASH_KEY', 'ECPAY_HASH_IV', 'LINE_CHANNEL_ACCESS_TOKEN', 'LINE_TO'];
 
 // Read the stream up to `limit` bytes; null when it is longer. Content-Length alone is not trusted.
 async function readBounded(stream, limit) {
@@ -21,7 +22,7 @@ async function readBounded(stream, limit) {
 }
 
 // One line, control characters stripped, so a note cannot masquerade as another line of the notification
-const oneLine = (v) => String(v ?? '').replace(/[\u0000-\u001f\u007f\u200e\u200f\u202a-\u202e\u2066-\u2069]+/g, ' ').trim();
+const oneLine = (v) => String(v ?? '').replace(/[\u0000-\u001f\u007f\u200e\u200f\u202a-\u202e\u2066-\u2069]+/g, ' ').trim().slice(0, 300); // ECPay caps both at 100; LINE text at 5000
 
 // Deterministic UUID per order so LINE dedups our retries too (X-Line-Retry-Key, valid 24h)
 async function retryKey(tradeNo) {
@@ -56,6 +57,7 @@ async function pushLine(env, message, tradeNo) {
 export default {
   async fetch(request, env) {
     if (request.method !== 'POST') return text('papaking sponsor webhook', 404);
+    if (SECRETS.some((k) => !env[k])) return text('misconfigured', 500); // never fail open on a missing secret
 
     const raw = await readBounded(request.body, MAX_BODY);
     if (raw === null) return text('too large', 413);

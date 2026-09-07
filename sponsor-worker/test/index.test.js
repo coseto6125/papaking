@@ -186,6 +186,22 @@ test('fetch_line_409_duplicate_retry_key_counts_as_delivered', async () => {
   assert.equal([...rows.values()][0].notified, 1);
 });
 
+test('fetch_missing_secret_returns_500_even_with_matching_body', async () => {
+  const res = await worker.fetch(new Request('https://x/', { method: 'POST', body: '{}' }), { ...env, ECPAY_MERCHANT_ID: undefined });
+  assert.equal(res.status, 500);
+});
+
+test('fetch_null_body_returns_403_not_500', async () => {
+  const res = await worker.fetch(new Request('https://x/', { method: 'POST', body: 'null' }), env);
+  assert.deepEqual([res.status, await res.text()], [403, 'rejected']);
+});
+
+test('fetch_long_note_is_truncated_so_line_accepts_it', async () => {
+  await request(payload({ PatronNote: '長'.repeat(2000) }));
+  assert.ok(linePushes[0].messages[0].text.length < 5000);
+  assert.equal(rows.size, 1);
+});
+
 test('fetch_get_returns_404', async () => {
   assert.equal((await request(payload(), { method: 'GET' })).status, 404);
 });
