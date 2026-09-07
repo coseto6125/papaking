@@ -1,14 +1,15 @@
 # 🅿️ PapaKing - 台灣停車資訊查詢 LINE Bot
 
-基於 **TDX 運輸資料流通服務** 的停車場資訊查詢系統，透過 LINE Bot 提供附近停車資訊。
+基於 **TDX 運輸資料流通服務** 的停車資訊查詢系統，跑在 Google Apps Script 上，傳一個位置給 LINE Bot 就回附近的停車格與停車場。
 
 ## ✨ 特色功能
 
-- 🚗 **路邊停車格查詢** - 依路段分組顯示，只顯示小客車格
-- 🏢 **停車場查詢** - 顯示名稱、地址等資訊
-- 📍 **距離計算** - 使用 Haversine 公式計算精確距離
-- 🗺️ **Google Maps 整合** - 一鍵導航到停車位置
-- ⚡ **雙版本實作** - Google Apps Script（無伺服器）+ Python Sanic（高效能）
+- 🚗 **路邊停車格** - 依路段分組，顯示路名、小客車格數、費率
+- 🏢 **停車場** - 名稱、地址、剩餘車位；新北、基隆另接市府開放資料補 TDX 沒有的場站
+- 🕒 **開車時間排序** - 直線最近的幾筆再問 Google 開車時間，依時間重排
+- 🗺️ **導航連結** - 每筆一鍵開 Google Maps 導航
+- 💬 **Flex 卡片** - LINE Flex Message 排版，超長自動拆訊息
+- ☁️ **零伺服器** - Google Apps Script 免費託管，設定全放指令碼屬性
 
 ## 📱 功能展示
 
@@ -17,85 +18,27 @@
   <p><i>傳送位置後，Bot 自動回覆附近停車資訊</i></p>
 </div>
 
-**查詢結果包含：**
-- 🅿️ 路邊停車格（依路段分組）
-  - 路段編號（如：路段 KB2）
-  - 停車格數量（小客車）
-  - 距離資訊
-  - Google Maps 導航連結
-- 🏢 停車場資訊
-  - 停車場名稱
-  - 地址
-  - Google Maps 位置
-
 ## 🏗️ 專案結構
 
 ```
 papaking/
-├── gas/              # Google Apps Script 版本（主要實作）
-│   └── line_webhook_gas.js
-├── sanic/            # Python Sanic 版本（替代方案）
-│   ├── line_webhook.py
-│   ├── papaking.py
-│   ├── parser.py
-│   ├── json_helpers.py
-│   └── requirements.txt
-├── docs/             # API 規格與文件
+├── gas/
+│   ├── line_webhook_gas.js   # 全部程式
+│   └── README.md             # 部署步驟、資料來源、配額、測試
+├── docs/                     # TDX API 規格
+├── image/
 └── README.md
 ```
 
 ## 🚀 快速開始
 
-### 方案 A：Google Apps Script（推薦）
+1. 前往 [Google Apps Script](https://script.google.com) 建立新專案，貼上 `gas/line_webhook_gas.js`
+2. 在「專案設定 > 指令碼屬性」填 `LINE_CHANNEL_ACCESS_TOKEN` 與 `TDX_KEYS`
+3. 部署為 Web App（執行身分：我，存取權：任何人）
+4. 把 Web App URL 填進 LINE Developers Console 的 Webhook URL
 
-**優勢：** 免費託管、零維護、快速部署
-
-1. 前往 [Google Apps Script](https://script.google.com)
-2. 建立新專案，貼上 `gas/line_webhook_gas.js`
-3. 設定環境變數（LINE Token、TDX API Key）
-4. 部署為 Web App
-5. 設定 LINE Webhook URL
-
-詳細步驟請參考：[完整部署文件](https://www.notion.so/2a37a24cf64081dcbc11c8948ad10337)
-
-### 方案 B：Python Sanic
-
-**適合：** 需要高度客製化或大流量場景
-
-```bash
-cd sanic
-pip install -r requirements.txt
-
-# 設定 .env
-cp ../.env.example .env
-# 編輯 .env 填入你的 API Keys
-
-# 啟動伺服器
-python line_webhook.py
-```
-
-## 📚 完整文件
-
-🔗 **詳細技術文件與流程圖：** https://www.notion.so/2a37a24cf64081dcbc11c8948ad10337
-
-包含：
-- 📊 系統架構流程圖（Mermaid）
-- 🛠️ 技術棧詳解
-- 🔧 部署步驟
-- 💡 效能優化策略
-- 🔐 安全性設計
-
-## 🔑 環境變數
-
-```bash
-# LINE Bot 設定
-LINE_CHANNEL_ACCESS_TOKEN=your_token
-LINE_CHANNEL_SECRET=your_secret
-
-# TDX API 金鑰（至 https://tdx.transportdata.tw 申請）
-CLIENT_ID=your_tdx_client_id
-CLIENT_SECRET=your_tdx_client_secret
-```
+屬性格式、多把 TDX 金鑰輪替、Google Maps 配額、資料來源與測試函式：見 [gas/README.md](gas/README.md)。
+完整部署文件與流程圖：https://www.notion.so/2a37a24cf64081dcbc11c8948ad10337
 
 ## 📋 授權條款
 

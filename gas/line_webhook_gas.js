@@ -1,6 +1,7 @@
 /**
- * LINE Webhook for Google Apps Script - 最終版
+ * LINE Webhook for Google Apps Script
  * 全台停車資訊查詢
+ * @version 0.2.0
  */
 
 // ========== 設定區 ==========
