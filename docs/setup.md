@@ -172,7 +172,7 @@ clasp create-deployment --deploymentId <上面抄的 id> --description "v2"   # 
 
 ## 贊助
 
-這個 Bot 跑在免費額度上，維護靠愛發電。覺得好用的話，歡迎請作者喝杯咖啡；贊助時在「留言」寫下你想要的功能，有機會優先做。
+這個專案沒有公開的 Bot，照教學自己架一個就能用，維護靠愛發電。架起來覺得好用的話，歡迎請作者喝杯咖啡；贊助時在「留言」寫下你想要的功能，有機會優先做。
 
 [![贊助 PapaKing](../image/sponsor_banner.gif)](https://p.ecpay.com.tw/AA249AA)
 
