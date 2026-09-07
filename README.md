@@ -2,6 +2,8 @@
 
 基於 **TDX 運輸資料流通服務** 的停車資訊查詢系統，跑在 Google Apps Script 上，傳一個位置給 LINE Bot 就回附近的停車格與停車場。
 
+📖 **想自己架一個？看 [架設教學](docs/setup.md)**：TDX 申請、LINE 官方帳號、GAS 部署與金鑰管理、問答，約 30 分鐘。
+
 ## ✨ 特色功能
 
 - 🚗 **路邊停車格** - 依路段分組，顯示路名、小客車格數、費率
@@ -33,13 +35,14 @@ papaking/
 
 ## 🚀 快速開始
 
+完整教學（TDX 申請、LINE 官方帳號、clasp 部署、金鑰管理、問答）：**[docs/setup.md](docs/setup.md)**
+
 1. 前往 [Google Apps Script](https://script.google.com) 建立新專案，貼上 `gas/line_webhook_gas.js`
 2. 在「專案設定 > 指令碼屬性」填 `LINE_CHANNEL_ACCESS_TOKEN` 與 `TDX_KEYS`
 3. 部署為 Web App（執行身分：我，存取權：任何人）
 4. 把 Web App URL 填進 LINE Developers Console 的 Webhook URL
 
 屬性格式、多把 TDX 金鑰輪替、Google Maps 配額、資料來源與測試函式：見 [gas/README.md](gas/README.md)。
-完整部署文件與流程圖：https://www.notion.so/2a37a24cf64081dcbc11c8948ad10337
 
 ## 📋 授權條款
 
