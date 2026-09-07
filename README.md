@@ -15,10 +15,18 @@
 
 ## 📱 功能展示
 
-<div align="center">
-  <img src="image/sample.jpg" alt="LINE Bot 使用範例" width="300"/>
-  <p><i>傳送位置後，Bot 自動回覆附近停車資訊</i></p>
-</div>
+<table align="center">
+  <tr>
+    <td align="center"><a href="image/demo.mp4"><img src="image/demo.gif" alt="操作示範：傳位置到收到停車卡片" width="240"/></a></td>
+    <td align="center"><img src="image/reply_cards.jpg" alt="Flex 卡片：路邊停車格與停車場" width="240"/></td>
+    <td align="center"><img src="image/reply_full.jpg" alt="完整回覆：文字清單加卡片" width="240"/></td>
+  </tr>
+  <tr>
+    <td align="center"><i>傳送位置 → 幾秒後收到回覆</i><br/><sub><a href="image/demo.mp4">看 mp4 原檔</a></sub></td>
+    <td align="center"><i>Flex 卡片一鍵開車導航</i></td>
+    <td align="center"><i>完整回覆：路邊停車格、停車場各一則</i></td>
+  </tr>
+</table>
 
 ## 🏗️ 專案結構
 
