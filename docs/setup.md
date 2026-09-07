@@ -5,9 +5,13 @@
 
 | 步驟 | 要拿到的東西 | 花多久 |
 |------|------------|--------|
-| 1. TDX 申請 API key | `Client Id` + `Client Secret` | 5 分鐘，審核即時 |
-| 2. LINE 官方帳號申請 | `Channel access token` | 10 分鐘 |
-| 3. GAS 程式碼配置與金鑰管理 | Web App URL，填回 LINE | 10 分鐘 |
+| [1. TDX 申請 API key](#1-tdx-申請-api-key) | `Client Id` + `Client Secret` | 5 分鐘，審核即時 |
+| [2. LINE 官方帳號申請](#2-line-官方帳號申請) | `Channel access token` | 10 分鐘 |
+| [3. GAS 程式碼配置與金鑰管理](#3-gas-程式碼配置與金鑰管理) | Web App URL，填回 LINE | 10 分鐘 |
+
+- 第 2 步：[建立官方帳號](#2-1-建立官方帳號) · [啟用 Messaging API](#2-2-啟用-messaging-api) · [發行 Channel access token](#2-3-發行-channel-access-token) · [用 API 設定 Webhook](#2-4-用-api-設定-webhook等第-3-步拿到-url-再做)
+- 第 3 步：[用 clasp 部署](#3-a-用-clasp-部署) · [用網頁貼上](#3-b-用網頁貼上) · [填金鑰](#3-c-填金鑰兩條路都要做) · [授權並驗證](#3-d-授權並驗證) · [接回 LINE 並試用](#3-e-接回-line-並試用)
+- [贊助](#贊助) · [問答 QA](#問答-qa)
 
 
 ## 1. TDX 申請 API key
