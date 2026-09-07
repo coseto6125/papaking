@@ -138,7 +138,7 @@ test('fetch_d1_insert_failure_returns_500_without_pushing', async () => {
 });
 
 test('fetch_missing_orderinfo_acks_without_crash', async () => {
-  assert.deepEqual(await request({ RtnCode: 10200073, RtnMsg: 'fail' }), { status: 200, text: '1|OK' });
+  assert.deepEqual(await request({ RtnCode: 1, RtnMsg: '成功' }), { status: 200, text: '1|OK' }); // RtnCode ok, OrderInfo absent
   assert.equal(rows.size, 0);
 });
 
@@ -161,7 +161,7 @@ test('fetch_non_json_body_returns_400', async () => {
   assert.equal(rows.size, 0);
 });
 
-test('fetch_undecryptable_data_returns_400', async () => {
+test('fetch_undecryptable_data_returns_403_rejected', async () => {
   const body = { MerchantID: env.ECPAY_MERCHANT_ID, Data: 'bm90IGEgY2lwaGVydGV4dA==', CheckMacValue: 'X' };
   const res = await worker.fetch(new Request('https://x/', { method: 'POST', body: JSON.stringify(body) }), env);
   assert.deepEqual([res.status, await res.text()], [403, 'rejected']);
