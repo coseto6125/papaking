@@ -27,6 +27,7 @@ var QUOTA_WHITELIST = (PROPS.getProperty('QUOTA_WHITELIST') || '').split(',').ma
 var SETUP_URL = 'https://github.com/coseto6125/papaking/blob/main/docs/setup.md'
 var QUOTA_USER_TEXT = '本月 ' + MONTHLY_QUOTA + ' 次額度已用完，下個月 1 號重置。\n想不限次數用，自己架一個只要 20 分鐘：\n' + SETUP_URL
 var QUOTA_BUDGET_TEXT = '本月公共額度已用完，下個月 1 號重置。\n想不限次數用，自己架一個只要 20 分鐘：\n' + SETUP_URL
+var QUOTA_STORE_FULL_TEXT = '本月的使用者人數統計已滿，暫時無法再接新的使用者，下個月 1 號重置。\n想不限次數用，自己架一個只要 20 分鐘：\n' + SETUP_URL
 
 // 屬性是人工填的，JSON 打錯不能讓頂層丟例外——那會發生在 doPost 的 try 之前，
 // web app 直接回 500，執行記錄裡看不出跟 LINE 或 TDX 無關
@@ -222,8 +223,17 @@ function consumeQuota(source) {
   var total = Number(PROPS.getProperty(totalKey)) || 0;
   if (MONTHLY_BUDGET && total >= Math.floor(MONTHLY_BUDGET * (listed ? 1 : PUBLIC_SHARE))) return QUOTA_BUDGET_TEXT;
   var userKey = MONTHLY_QUOTA && id && !listed ? quotaUserKey(prefix, id) : null;
-  if (userKey && (Number(PROPS.getProperty(userKey)) || 0) >= MONTHLY_QUOTA) return QUOTA_USER_TEXT;
-  if (userKey) PROPS.setProperty(userKey, String((Number(PROPS.getProperty(userKey)) || 0) + 1));
+  var stored = userKey ? PROPS.getProperty(userKey) : null;
+  if (userKey && (Number(stored) || 0) >= MONTHLY_QUOTA) return QUOTA_USER_TEXT;
+  if (userKey) {
+    // 屬性庫 500KB 塞滿時新使用者的鍵寫不進去：沒法計數就不放行，並說明是人數滿了不是他的額度
+    try {
+      PROPS.setProperty(userKey, String((Number(stored) || 0) + 1));
+    } catch (err) {
+      Logger.log('額度計數寫入失敗: ' + err);
+      if (stored === null) return QUOTA_STORE_FULL_TEXT;
+    }
+  }
   if (MONTHLY_BUDGET) PROPS.setProperty(totalKey, String(total + 1));
   return null;
 }
