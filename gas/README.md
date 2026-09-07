@@ -33,7 +33,8 @@
 - `rankSections()` / `driveTimesBatch()` - 兩段各自依直線排序，最近的 3 個路段加 2 個停車場的開車時間一批併發問 Google 地圖 RPC 後重排（同起點格到同終點快取 30 分鐘；RPC 失敗退回內建 DirectionFinder）
 - `navLink()` - 產生 Google Maps 開車導航連結（不吃配額）
 - `buildReply()` - 兩個 TDX NearBy 用 `UrlFetchApp.fetchAll` 併發，再組回覆
-- `ntpcCarparksNear()` - 新北市路外停車場改走新北開放資料（含每 3 分鐘更新的剩餘車位），座標由 TWD97 換算
+- `ntpcCarparksNear()` - 新北市路外停車場改走新北開放資料（剩餘車位每次查詢重抓，不快取），座標由 TWD97 換算
+- `nearbyCached()` / `nearbyStore()` - TDX 兩個 NearBy 的靜態結果按 110m 格子快取 6 小時，同一格重複查詢不花 TDX 點數；剩餘位不在這份資料裡，不受影響
 
 ## 🗂️ 資料來源
 
@@ -63,6 +64,7 @@ TDX 與市府資料都沒有私營場站（歐特儀、Times、嘟嘟房）。`G
 ```javascript
 testFull()  // 完整測試
 testConfig()  // 驗證設定
+testNearbyCache()  // 同一座標查兩次，第二次 TDX 應命中格子快取
 ```
 
 ## 📚 詳細文件

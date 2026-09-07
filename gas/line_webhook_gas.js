@@ -1,7 +1,7 @@
 /**
  * LINE Webhook for Google Apps Script
  * 全台停車資訊查詢
- * @version 0.2.0
+ * @version 0.2.1
  */
 
 // ========== 設定區 ==========
@@ -37,7 +37,7 @@ var BASE_URL = 'https://tdx.transportdata.tw/api/advanced/v1'
 var BASE_URL_BASIC = 'https://tdx.transportdata.tw/api/basic/v1'
 var LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply'
 // 新北市政府沒把路外停車場上傳 TDX（TDX 的 NewTaipei CarPark 是空的，只有台鐵等業者自行上傳的場站），
-// 改接新北開放資料：靜態清單 6h 快取、即時剩餘車位 3 分鐘快取，用停車場 ID 對上
+// 改接新北開放資料：靜態清單 6h 快取、即時剩餘車位每次查詢重抓（不快取），用停車場 ID 對上
 var NTPC_API = 'https://data.ntpc.gov.tw/api/datasets/'
 var NTPC_CARPARK_STATIC = 'b1464ef0-9c7c-4a6f-abf7-6bdf32847e68'
 var NTPC_CARPARK_LIVE = 'e09b35a5-a738-48cc-b0f5-570b67ad9c78'
@@ -51,6 +51,14 @@ var KLCG_LIVE_STALE_MS = 24 * 60 * 60 * 1000
 // Google Maps Platform 條款只允許 geocode 座標暫存 30 天，到期重查（22 座場站一年不到 300 次配額）
 var GEOCODE_TTL_MS = 30 * 24 * 60 * 60 * 1000
 var SEARCH_RADIUS_KM = 1.0
+// TDX NearBy 回的是靜態基本資料（沒有剩餘位），按位置格子快取 6h 省進階 API 點數：
+// 格子取小數 3 位（約 110m），查詢用格子中心、半徑多加 NEARBY_GRID_PAD_KM 吃掉偏移，
+// 回來再用使用者真實座標過濾半徑並取最近 N 筆，結果與直接查一樣
+var NEARBY_CACHE_SECONDS = 21600
+var NEARBY_GRID_DECIMALS = 3
+var NEARBY_GRID_PAD_KM = 0.1
+var ONSTREET_TOP = 10   // 路邊：最近 10 個格位再依路段分組
+var CARPARK_TOP = 5     // 停車場：TDX 最多 5 座
 // Google 地圖搜尋 RPC（沒有金鑰、非公開介面）補 TDX 與市府資料都沒有的私營場站。
 // 只有名稱、地址、座標、營業時間，沒有格數、剩餘、費率；欄位位置一改就會靜默失效。
 // 先關著，用 testGooglePlaces() 確認 Apps Script 的出口打得通再開
@@ -160,7 +168,7 @@ function handleLocation(event) {
   replyLine(replyToken, buildReply(lat, lon));
 }
 
-// 兩個 TDX NearBy 同時發出，之後的路段表、新北資料多半命中快取。
+// 兩個 TDX NearBy 先查格子快取，未命中的才打；即時剩餘（新北、基隆）每次都抓，併進同一批。
 // 回傳最多三則訊息（路邊停車格文字、停車場文字、有結果時再加一則 Flex carousel）：
 // 一個 reply token 最多可送 5 則，文字各自 5,000 字上限，拆開就不會互相擠壓
 function buildReply(lat, lon) {
@@ -169,20 +177,19 @@ function buildReply(lat, lon) {
   var city = resolveTDXCity(lat, lon);
   lap('反查縣市');
   var radiusM = Math.round(SEARCH_RADIUS_KM * 1000);
-  var nearby = encodeURIComponent('nearby(' + lat + ',' + lon + ',' + radiusM + ')');
-  // 新北／基隆的即時剩餘快取失效時，把那幾筆請求併進同一批，不要等 TDX 回來才開始抓
-  var liveRequests = liveCacheRequests(city);
+  var nearby = nearbyCached(lat, lon);
+  // 新北／基隆的即時剩餘不快取，每次都把那幾筆請求併進同一批，不要等 TDX 回來才開始抓
+  var live = liveRequests(city);
   var needToken = (GOOGLE_PLACES_ENABLED || DRIVE_TIME_RPC_ENABLED) && !CacheService.getScriptCache().get('google_kei');
-  var responses = tdxFetchAll([
-    BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=10',
-    BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + nearby + '&$format=JSON&$top=5'
-  ], liveRequests.concat(needToken ? [googleTokenRequest()] : []));
-  lap('TDX 併發 ' + (2 + liveRequests.length + (needToken ? 1 : 0)) + ' 筆');
-  primeLiveCache(city, responses.slice(2, 2 + liveRequests.length));
-  var tokenResponse = needToken ? responses[2 + liveRequests.length] : null;
+  var responses = tdxFetchAll(nearby.missUrls, live.concat(needToken ? [googleTokenRequest()] : []));
+  lap('TDX 併發 ' + nearby.missUrls.length + ' 筆（格子快取命中 ' + (2 - nearby.missUrls.length) + '），即時 ' + live.length + ' 筆');
+  var tdxResponses = nearbyStore(nearby, responses.slice(0, nearby.missUrls.length));
+  var rest = responses.slice(nearby.missUrls.length);
+  loadLive(city, rest.slice(0, live.length));
+  var tokenResponse = needToken ? rest[live.length] : null;
   if (tokenResponse) getGoogleToken(tokenResponse);  // 寫進快取，後面的開車時間批次和 Places 直接取用
-  var onStreetParsed = parseOnStreet(responses[0]);
-  var parkingParsed = parseParking(lat, lon, city, responses[1], tokenResponse);
+  var onStreetParsed = parseOnStreet(lat, lon, tdxResponses[0]);
+  var parkingParsed = parseParking(lat, lon, city, tdxResponses[1], tokenResponse);
   lap('解析兩段資料');
   // 兩段要問的開車時間收成一批 RPC，只多等最慢那一筆
   var ranked = rankSections(lat, lon, [
@@ -404,6 +411,59 @@ function fetchAllSafe(requests) {
 
 // 多個 TDX GET 併發：各挑一把金鑰同時發出；哪一筆撞到金鑰問題就標記用滿，退回 tdxFetch 換把重試。
 // extraRequests 是不需要 TDX 金鑰的其他請求，搭同一批發出，回傳陣列接在 TDX 結果後面（失敗為 null）
+// 格子中心座標：快取鍵與 TDX 查詢都用它，同一格的查詢才會共用同一筆快取
+function nearbyGrid(lat, lon) {
+  var f = Math.pow(10, NEARBY_GRID_DECIMALS);
+  return { lat: Math.round(lat * f) / f, lon: Math.round(lon * f) / f };
+}
+
+// 讀格子快取。hits[i] 是命中的回應內容（沒命中為 null），missUrls 是要打 TDX 的網址（依 hits 順序只含未命中的）。
+// $top 比實際要的多幾筆：查詢半徑有加 pad，過濾回使用者真實半徑後可能少掉幾筆
+function nearbyCached(lat, lon) {
+  var g = nearbyGrid(lat, lon);
+  var suffix = g.lat.toFixed(NEARBY_GRID_DECIMALS) + '_' + g.lon.toFixed(NEARBY_GRID_DECIMALS);
+  var keys = ['nearby_spot_' + suffix, 'nearby_park_' + suffix];
+  var filter = encodeURIComponent('nearby(' + g.lat + ',' + g.lon + ',' + Math.round((SEARCH_RADIUS_KM + NEARBY_GRID_PAD_KM) * 1000) + ')');
+  var urls = [
+    BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + filter + '&$format=JSON&$top=' + (ONSTREET_TOP + 4),
+    BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + filter + '&$format=JSON&$top=' + (CARPARK_TOP + 3)
+  ];
+  var cached = CacheService.getScriptCache().getAll(keys);
+  var hits = keys.map(function (k) { return cached[k] || null; });
+  return { keys: keys, hits: hits, missUrls: urls.filter(function (_, i) { return hits[i] === null; }) };
+}
+
+// 把這次真的打 TDX 的回應寫進格子快取：200 存內容、404 存空陣列（範圍內沒有也是穩定結果），其他狀態不存。
+// 回傳兩個 response 形狀的物件，命中的也包成同樣形狀，parseOnStreet／parseParking 不用分辨來源
+function nearbyStore(nearby, fetched) {
+  var cache = CacheService.getScriptCache();
+  var out = [];
+  var n = 0;
+  for (var i = 0; i < 2; i++) {
+    if (nearby.hits[i] !== null) { out[i] = textResponse(200, nearby.hits[i]); continue; }
+    var res = fetched[n++];
+    var code = res.getResponseCode();
+    var text = code === 200 ? res.getContentText() : code === 404 ? '[]' : null;
+    if (text !== null && text.length < 90000) cache.put(nearby.keys[i], text, NEARBY_CACHE_SECONDS);  // CacheService 單筆 100KB
+    out[i] = res;
+  }
+  return out;
+}
+
+function textResponse(code, text) {
+  return { getResponseCode: function () { return code; }, getContentText: function () { return text; } };
+}
+
+// 用使用者真實座標過濾半徑內的資料並依直線距離取最近 n 筆（TDX 查詢是以格子中心算的，這裡校正回來）
+function nearestWithin(lat, lon, items, posOf, n) {
+  return items
+    .map(function (it) { var p = posOf(it); return { it: it, d: calculateDistance(lat, lon, p.PositionLat, p.PositionLon) }; })
+    .filter(function (x) { return x.d <= SEARCH_RADIUS_KM; })
+    .sort(function (a, b) { return a.d - b.d; })
+    .slice(0, n)
+    .map(function (x) { return x.it; });
+}
+
 function tdxFetchAll(urls, extraRequests) {
   if (!TDX_KEYS.length) throw new Error('TDX_KEYS 未設定或格式錯誤');
   extraRequests = extraRequests || [];
@@ -628,22 +688,23 @@ function getNtpcCarparks() {
   return list;
 }
 
-// 新北即時剩餘汽車位 { ID: 剩餘數 }，來源每 3 分鐘更新，快取 180s
+// 這次執行內已抓到的即時剩餘，按來源放。剩餘位不進 CacheService：每次查詢都重抓，使用者看到的永遠是當下的數字
+var LIVE = {};
+
+// 新北即時剩餘汽車位 { ID: 剩餘數 }；buildReply 已併批抓過就直接用
 function getNtpcLive() {
-  var cache = CacheService.getScriptCache();
-  var cached = cacheGetChunked(cache, 'ntpc_live');
-  if (cached) return JSON.parse(cached);
-  if (cache.get('ntpc_live_failed')) return {};  // 剛剛併批那輪已經失敗過，一分鐘內不再重打
+  if (LIVE.ntpc) return LIVE.ntpc;
+  if (CacheService.getScriptCache().get('ntpc_live_failed')) return {};  // 剛剛併批那輪已經失敗過，一分鐘內不再重打
   try {
-    return cacheNtpcLive(ntpcFetchAllPages(NTPC_CARPARK_LIVE));
+    return parseNtpcLive(ntpcFetchAllPages(NTPC_CARPARK_LIVE));
   } catch (err) {
     Logger.log('新北即時車位錯誤: ' + err);
     return {};
   }
 }
 
-// rows 為 null（抓取失敗）時回空表、不寫快取，只留 60 秒的失敗標記讓同一次執行不重試
-function cacheNtpcLive(rows) {
+// rows 為 null（抓取失敗）時回空表，只留 60 秒的失敗標記讓接下來一分鐘的查詢不卡在它上面
+function parseNtpcLive(rows) {
   var live = {};
   if (!rows) {
     CacheService.getScriptCache().put('ntpc_live_failed', '1', 60);
@@ -653,7 +714,7 @@ function cacheNtpcLive(rows) {
     var n = Number(rows[i].AVAILABLECAR);
     if (rows[i].ID && n >= 0) live[rows[i].ID] = n;
   }
-  if (rows.length) cachePutChunked(CacheService.getScriptCache(), 'ntpc_live', JSON.stringify(live), 180);
+  LIVE.ntpc = live;
   return live;
 }
 
@@ -750,23 +811,21 @@ function getKlcgCarparks() {
   return list;
 }
 
-// 基隆即時剩餘 { 正規化名稱: 剩餘數 }，快取 180s；更新時間超過一天的視為失聯不採用
+// 基隆即時剩餘 { 正規化名稱: 剩餘數 }；更新時間超過一天的視為失聯不採用。buildReply 已併批抓過就直接用
 function getKlcgLive() {
-  var cache = CacheService.getScriptCache();
-  var cached = cache.get('klcg_live');
-  if (cached) return JSON.parse(cached);
-  if (cache.get('klcg_live_failed')) return {};
+  if (LIVE.klcg) return LIVE.klcg;
+  if (CacheService.getScriptCache().get('klcg_live_failed')) return {};
   try {
     var response = UrlFetchApp.fetch(KLCG_LIVE_PAGE, { muteHttpExceptions: true });
-    return cacheKlcgLive(response.getResponseCode() === 200 ? response.getContentText() : null);
+    return parseKlcgLive(response.getResponseCode() === 200 ? response.getContentText() : null);
   } catch (err) {
     Logger.log('基隆即時車位錯誤: ' + err);
     return {};
   }
 }
 
-// html 為 null（抓取失敗）時回空表、不寫快取，只留 60 秒的失敗標記讓同一次執行不重試
-function cacheKlcgLive(html) {
+// html 為 null（抓取失敗）時回空表，只留 60 秒的失敗標記讓接下來一分鐘的查詢不卡在它上面
+function parseKlcgLive(html) {
   var live = {};
   if (!html) {
     CacheService.getScriptCache().put('klcg_live_failed', '1', 60);
@@ -779,7 +838,7 @@ function cacheKlcgLive(html) {
     if (isNaN(updated) || Date.now() - updated > KLCG_LIVE_STALE_MS) continue;
     live[klcgNormalizeName(m[1])] = Number(m[2]);
   }
-  if (Object.keys(live).length) CacheService.getScriptCache().put('klcg_live', JSON.stringify(live), 180);
+  LIVE.klcg = live;
   return live;
 }
 
@@ -830,23 +889,22 @@ function klcgCarparksNear(lat, lon, radiusKm) {
   });
 }
 
-// 該縣市即時剩餘的快取若已失效，回傳要抓的請求，讓 buildReply 併進 TDX 那一批；快取還在就回空陣列
-function liveCacheRequests(city) {
-  var cache = CacheService.getScriptCache();
+// 該縣市即時剩餘要抓的請求，讓 buildReply 併進 TDX 那一批（每次都抓，沒有快取可省）
+function liveRequests(city) {
   switch (city) {
-    case 'NewTaipei': return cache.get('ntpc_live') ? [] : ntpcFirstPageRequests(NTPC_CARPARK_LIVE);
-    case 'Keelung': return cache.get('klcg_live') ? [] : [{ url: KLCG_LIVE_PAGE, muteHttpExceptions: true }];
+    case 'NewTaipei': return ntpcFirstPageRequests(NTPC_CARPARK_LIVE);
+    case 'Keelung': return [{ url: KLCG_LIVE_PAGE, muteHttpExceptions: true }];
     default: return [];
   }
 }
 
-// 把 liveCacheRequests 那幾筆的回應寫進快取；responses 為空表示快取原本就在
-function primeLiveCache(city, responses) {
+// 把 liveRequests 那幾筆的回應解析進 LIVE，後面 ntpcCarparksNear／klcgCarparksNear 直接用
+function loadLive(city, responses) {
   if (!responses.length) return;
   try {
     switch (city) {
-      case 'NewTaipei': cacheNtpcLive(ntpcRowsFromPages(NTPC_CARPARK_LIVE, responses)); break;
-      case 'Keelung': cacheKlcgLive(responses[0] && responses[0].getResponseCode() === 200 ? responses[0].getContentText() : null); break;
+      case 'NewTaipei': parseNtpcLive(ntpcRowsFromPages(NTPC_CARPARK_LIVE, responses)); break;
+      case 'Keelung': parseKlcgLive(responses[0] && responses[0].getResponseCode() === 200 ? responses[0].getContentText() : null); break;
     }
   } catch (err) {
     Logger.log('即時車位預載錯誤: ' + err);
@@ -1134,7 +1192,7 @@ function navLink(lat, lon) {
 }
 
 // 路邊停車格：解析 TDX 回應成 { error } 或 { entries }（每筆 segId、spotCount、lat、lon）
-function parseOnStreet(response) {
+function parseOnStreet(lat, lon, response) {
   try {
     var status = response.getResponseCode();
     Logger.log('路邊停車格狀態: ' + status);
@@ -1144,6 +1202,7 @@ function parseOnStreet(response) {
 
     var items = JSON.parse(response.getContentText());
     if (!Array.isArray(items) || !items.length) return { error: '目前沒有查詢到路邊停車格' };
+    items = nearestWithin(lat, lon, items, function (it) { return it.Position || {}; }, ONSTREET_TOP);
 
     // 只保留小客車停車格 (SpaceType = 1)，再依 ParkingSegmentID 群組
     var segments = {};
@@ -1195,7 +1254,7 @@ function parseParking(lat, lon, city, response, googleTokenResponse) {
     var entries = [];
     if (status === 200) {
       var items = JSON.parse(response.getContentText());
-      entries = (Array.isArray(items) ? items : []).slice(0, 5).map(function (item) {
+      entries = nearestWithin(lat, lon, Array.isArray(items) ? items : [], function (it) { return it.CarParkPosition || {}; }, CARPARK_TOP).map(function (item) {
         var pos = item.CarParkPosition || {};
         return {
           name: (item.CarParkName && item.CarParkName.Zh_tw) || '未知',
@@ -1326,6 +1385,16 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 
+
+// 同一座標查兩次：第二次兩個 NearBy 都該命中格子快取（執行記錄的「格子快取命中 2」），
+// 而新北／基隆的即時剩餘兩次都會重抓
+function testNearbyCache() {
+  var lat = 25.0478, lon = 121.5170;  // 台北車站
+  buildReply(lat, lon);
+  buildReply(lat, lon);
+  var hits = nearbyCached(lat, lon).hits.map(function (h) { return h !== null; });
+  Logger.log((hits[0] && hits[1] ? '✓' : '✗') + ' 格子快取命中：路邊 ' + hits[0] + '、停車場 ' + hits[1]);
+}
 
 function testConfig() {
   var problems = [];
