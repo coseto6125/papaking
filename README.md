@@ -25,6 +25,7 @@ papaking/
 ├── gas/
 │   ├── line_webhook_gas.js   # 全部程式
 │   └── README.md             # 部署步驟、資料來源、配額、測試
+├── sponsor-worker/           # 綠界贊助通知 → D1 + LINE 推播（Cloudflare Worker）
 ├── docs/                     # TDX API 規格
 ├── image/
 └── README.md

@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "papaking-sponsor",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "papaking-sponsor", "database_id": "7e8ad199-a252-41e1-926a-bf05e965bc2e" }
+  ]
+}
