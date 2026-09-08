@@ -55,10 +55,15 @@ var SEARCH_RADIUS_KM = 1.0
 // 格子取小數 3 位（約 110m），查詢用格子中心、半徑多加 NEARBY_GRID_PAD_KM 吃掉偏移，
 // 回來再用使用者真實座標過濾半徑並取最近 N 筆，結果與直接查一樣
 var NEARBY_CACHE_SECONDS = 21600
+var NEARBY_CACHE_MAX_CHARS = 30000   // CacheService 單筆 100KB；全中文也不會超過
+var NEARBY_EMPTY_CACHE_SECONDS = 1800   // 404（範圍內沒有）快取短一點，暫時性異常不會卡 6 小時
 var NEARBY_GRID_DECIMALS = 3
 var NEARBY_GRID_PAD_KM = 0.1
 var ONSTREET_TOP = 10   // 路邊：最近 10 個格位再依路段分組
 var CARPARK_TOP = 5     // 停車場：TDX 最多 5 座
+// 向 TDX 多要幾筆：格心離使用者最遠約 75m，格心排序的前幾名不一定是使用者的前幾名，候選多一些再本地重排
+var ONSTREET_FETCH = 30
+var CARPARK_FETCH = 10
 // Google 地圖搜尋 RPC（沒有金鑰、非公開介面）補 TDX 與市府資料都沒有的私營場站。
 // 只有名稱、地址、座標、營業時間，沒有格數、剩餘、費率；欄位位置一改就會靜默失效。
 // 先關著，用 testGooglePlaces() 確認 Apps Script 的出口打得通再開
@@ -172,6 +177,7 @@ function handleLocation(event) {
 // 回傳最多三則訊息（路邊停車格文字、停車場文字、有結果時再加一則 Flex carousel）：
 // 一個 reply token 最多可送 5 則，文字各自 5,000 字上限，拆開就不會互相擠壓
 function buildReply(lat, lon) {
+  LIVE = {};  // 同一次執行處理多個事件時，每個事件都重抓即時剩餘
   var t0 = Date.now();
   var lap = function (label) { Logger.log('⏱ ' + label + ' ' + (Date.now() - t0) + 'ms'); };
   var city = resolveTDXCity(lat, lon);
@@ -417,23 +423,24 @@ function nearbyGrid(lat, lon) {
   return { lat: Math.round(lat * f) / f, lon: Math.round(lon * f) / f };
 }
 
-// 讀格子快取。hits[i] 是命中的回應內容（沒命中為 null），missUrls 是要打 TDX 的網址（依 hits 順序只含未命中的）。
-// $top 比實際要的多幾筆：查詢半徑有加 pad，過濾回使用者真實半徑後可能少掉幾筆
+// 讀格子快取。hits[i] 是命中的回應內容（沒命中為 null），missUrls 是要打 TDX 的網址（依 hits 順序只含未命中的）
 function nearbyCached(lat, lon) {
   var g = nearbyGrid(lat, lon);
   var suffix = g.lat.toFixed(NEARBY_GRID_DECIMALS) + '_' + g.lon.toFixed(NEARBY_GRID_DECIMALS);
-  var keys = ['nearby_spot_' + suffix, 'nearby_park_' + suffix];
-  var filter = encodeURIComponent('nearby(' + g.lat + ',' + g.lon + ',' + Math.round((SEARCH_RADIUS_KM + NEARBY_GRID_PAD_KM) * 1000) + ')');
+  var radiusM = Math.round((SEARCH_RADIUS_KM + NEARBY_GRID_PAD_KM) * 1000);
+  // 鍵帶半徑與筆數：改設定後舊快取自然失效，不會讀到較小的候選集合
+  var keys = ['nearby_spot_' + radiusM + '_' + ONSTREET_FETCH + '_' + suffix, 'nearby_park_' + radiusM + '_' + CARPARK_FETCH + '_' + suffix];
+  var filter = encodeURIComponent('nearby(' + g.lat + ',' + g.lon + ',' + radiusM + ')');
   var urls = [
-    BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + filter + '&$format=JSON&$top=' + (ONSTREET_TOP + 4),
-    BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + filter + '&$format=JSON&$top=' + (CARPARK_TOP + 3)
+    BASE_URL + '/Parking/OnStreet/ParkingSpot/NearBy?$spatialFilter=' + filter + '&$format=JSON&$top=' + ONSTREET_FETCH,
+    BASE_URL + '/Parking/OffStreet/CarPark/NearBy?$spatialFilter=' + filter + '&$format=JSON&$top=' + CARPARK_FETCH
   ];
   var cached = CacheService.getScriptCache().getAll(keys);
   var hits = keys.map(function (k) { return cached[k] || null; });
   return { keys: keys, hits: hits, missUrls: urls.filter(function (_, i) { return hits[i] === null; }) };
 }
 
-// 把這次真的打 TDX 的回應寫進格子快取：200 存內容、404 存空陣列（範圍內沒有也是穩定結果），其他狀態不存。
+// 把這次真的打 TDX 的回應寫進格子快取：200 且內容是陣列才存、404 存空陣列（範圍內沒有）但存短一點，其他不存。
 // 回傳兩個 response 形狀的物件，命中的也包成同樣形狀，parseOnStreet／parseParking 不用分辨來源
 function nearbyStore(nearby, fetched) {
   var cache = CacheService.getScriptCache();
@@ -442,10 +449,16 @@ function nearbyStore(nearby, fetched) {
   for (var i = 0; i < 2; i++) {
     if (nearby.hits[i] !== null) { out[i] = textResponse(200, nearby.hits[i]); continue; }
     var res = fetched[n++];
+    out[i] = res;
     var code = res.getResponseCode();
     var text = code === 200 ? res.getContentText() : code === 404 ? '[]' : null;
-    if (text !== null && text.length < 90000) cache.put(nearby.keys[i], text, NEARBY_CACHE_SECONDS);  // CacheService 單筆 100KB
-    out[i] = res;
+    if (text === null || text.length > NEARBY_CACHE_MAX_CHARS) continue;
+    try {
+      if (!Array.isArray(JSON.parse(text))) continue;  // 200 卻不是陣列（HTML、錯誤物件）不要存
+      cache.put(nearby.keys[i], text, code === 404 ? NEARBY_EMPTY_CACHE_SECONDS : NEARBY_CACHE_SECONDS);
+    } catch (err) {
+      Logger.log('格子快取寫入略過: ' + err);  // 快取寫不進去不能影響回覆
+    }
   }
   return out;
 }
@@ -454,10 +467,15 @@ function textResponse(code, text) {
   return { getResponseCode: function () { return code; }, getContentText: function () { return text; } };
 }
 
-// 用使用者真實座標過濾半徑內的資料並依直線距離取最近 n 筆（TDX 查詢是以格子中心算的，這裡校正回來）
+// 用使用者真實座標過濾半徑內的資料並依直線距離取最近 n 筆（TDX 查詢是以格子中心算的，這裡校正回來）。
+// 沒有座標的資料 TDX 既然回了就是在範圍內，跟舊版一樣保留，排在最後
 function nearestWithin(lat, lon, items, posOf, n) {
   return items
-    .map(function (it) { var p = posOf(it); return { it: it, d: calculateDistance(lat, lon, p.PositionLat, p.PositionLon) }; })
+    .map(function (it) {
+      var p = posOf(it);
+      var d = calculateDistance(lat, lon, p.PositionLat, p.PositionLon);
+      return { it: it, d: isNaN(d) ? SEARCH_RADIUS_KM : d };
+    })
     .filter(function (x) { return x.d <= SEARCH_RADIUS_KM; })
     .sort(function (a, b) { return a.d - b.d; })
     .slice(0, n)
@@ -688,7 +706,7 @@ function getNtpcCarparks() {
   return list;
 }
 
-// 這次執行內已抓到的即時剩餘，按來源放。剩餘位不進 CacheService：每次查詢都重抓，使用者看到的永遠是當下的數字
+// 這次事件已抓到的即時剩餘，按來源放。剩餘位不進 CacheService：每次查詢都向來源重抓（來源本身的更新週期另計）
 var LIVE = {};
 
 // 新北即時剩餘汽車位 { ID: 剩餘數 }；buildReply 已併批抓過就直接用

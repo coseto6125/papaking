@@ -34,7 +34,7 @@
 - `navLink()` - 產生 Google Maps 開車導航連結（不吃配額）
 - `buildReply()` - 兩個 TDX NearBy 用 `UrlFetchApp.fetchAll` 併發，再組回覆
 - `ntpcCarparksNear()` - 新北市路外停車場改走新北開放資料（剩餘車位每次查詢重抓，不快取），座標由 TWD97 換算
-- `nearbyCached()` / `nearbyStore()` - TDX 兩個 NearBy 的靜態結果按 110m 格子快取 6 小時，同一格重複查詢不花 TDX 點數；剩餘位不在這份資料裡，不受影響
+- `nearbyCached()` / `nearbyStore()` - TDX 兩個 NearBy 的靜態結果按 110m 格子快取 6 小時，命中時省下那兩次進階 API 呼叫（CacheService 可能提前逐出，命中不是保證）；靜態資料最多延遲 6 小時才看到 TDX 的增刪；剩餘位不在這份資料裡，不受影響
 
 ## 🗂️ 資料來源
 
